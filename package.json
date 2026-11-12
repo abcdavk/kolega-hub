@@ -10,7 +10,9 @@
     "lint:fix": "oxlint --fix"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
     "next": "16.4.3",
+    "postcss": "^8.5.32",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
@@ -20,7 +22,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "oxlint": "^1.90.0",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.3.5",
     "typescript": "^5"
   }
 }
