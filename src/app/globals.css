@@ -2,8 +2,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap");
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --paper: #f2f0e3;
   --coal: #1f1f1f;
   --background: var(--paper);
@@ -24,11 +26,10 @@
   --font-mono: var(--font-monospace);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--coal);
-    --foreground: var(--paper);
-  }
+.dark {
+  color-scheme: dark;
+  --background: var(--coal);
+  --foreground: var(--paper);
 }
 
 body {

@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { faAddressCard } from "@fortawesome/free-regular-svg-icons";
 import {
+  faMoon,
   faShoppingCart,
+  faSun,
   faUsers,
   faAddressCard as faAddressCardSolid,
   faUserGroup,
@@ -15,10 +18,23 @@ import Link from "next/link";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [isDark, setIsDark] = useState(false);
 
   const isPeoplePage = pathname === "/";
   const isProfilePage = pathname === "/profile";
   const isShopPage = pathname === "/shop";
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  // toggle theme handler
+  const toggleTheme = () => {
+    const nextIsDark = !isDark;
+    document.documentElement.classList.toggle("dark", nextIsDark);
+    localStorage.setItem("theme", nextIsDark ? "dark" : "light");
+    setIsDark(nextIsDark);
+  };
 
   const navItems = [
     {
@@ -86,18 +102,30 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-          <Link
-            href="/shop"
-            className={`flex h-14 items-center gap-3 overflow-clip rounded-xl px-6 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "bg-coal text-paper dark:bg-paper dark:text-coal shadow-md shadow-black/50" : ""}`}>
-            <div className="flex translate-y-9 flex-col items-center gap-12 transition-transform group-hover:-translate-y-10">
-              <IconKarma />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-14 w-14 items-center justify-center rounded-xl transition-transform duration-300 hover:scale-105 cursor-pointer">
               <FontAwesomeIcon
-                icon={faShoppingCart}
-                className="shrink-0 text-2xl"
+                icon={isDark ? faSun : faMoon}
+                className="text-xl"
+                aria-hidden="true"
               />
-            </div>
-            <span className="font-medium">2628</span>
-          </Link>
+            </button>
+            <Link
+              href="/shop"
+              className={`flex h-14 items-center gap-3 overflow-clip rounded-xl px-6 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "bg-coal text-paper dark:bg-paper dark:text-coal shadow-md shadow-black/50" : ""}`}>
+              <div className="flex translate-y-9 flex-col items-center gap-12 transition-transform group-hover:-translate-y-10">
+                <IconKarma />
+                <FontAwesomeIcon
+                  icon={faShoppingCart}
+                  className="shrink-0 text-2xl"
+                />
+              </div>
+              <span className="font-medium">2628</span>
+            </Link>
+          </div>
         </LayoutGroup>
       </nav>
     </header>

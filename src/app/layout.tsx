@@ -12,7 +12,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => {
+              const savedTheme = localStorage.getItem("theme");
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              document.documentElement.classList.toggle(
+                "dark",
+                savedTheme ? savedTheme === "dark" : prefersDark
+              );
+            })();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <Navbar />
         <div className="flex min-h-screen flex-col bg-paper font-sans dark:bg-coal">
