@@ -18,6 +18,7 @@ export default function Navbar() {
 
   const isPeoplePage = pathname === "/";
   const isProfilePage = pathname === "/profile";
+  const isShopPage = pathname === "/shop";
 
   const navItems = [
     {
@@ -55,15 +56,15 @@ export default function Navbar() {
                   animate={{
                     width: item.active ? 170 : 80,
                   }}
-                  transition={{ type: "spring" }}
-                  className={`flex h-14 items-center justify-center gap-3 overflow-hidden rounded-xl border-2 border-coal px-4 dark:border-paper ${
+                  transition={{ type: "spring", duration: 0.5 }}
+                  className={`flex h-14 items-center justify-center gap-3 overflow-hidden rounded-xl border-2 border-coal px-4 dark:border-paper group ${
                     item.active ? "bg-coal text-paper shadow-md shadow-black/50 dark:bg-paper dark:text-coal" : ""
                   }`}>
                   {item.href === "/" ? (
                     <>
                       {item.active && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
 
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center group-hover:animate-wiggle">
                         <FontAwesomeIcon
                           icon={item.active ? item.activeIcon : item.icon}
                           className="text-2xl"
@@ -72,7 +73,7 @@ export default function Navbar() {
                     </>
                   ) : (
                     <>
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center group-hover:animate-wiggle">
                         <FontAwesomeIcon
                           icon={item.active ? item.activeIcon : item.icon}
                           className="text-2xl"
@@ -85,20 +86,19 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
+          <Link
+            href="/shop"
+            className={`flex h-14 items-center gap-3 overflow-clip rounded-xl bg-coal px-6 text-paper shadow-md shadow-black/50 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "dark:bg-paper dark:text-coal" : ""}`}>
+            <div className="flex translate-y-9 flex-col items-center gap-12 transition-transform group-hover:-translate-y-10">
+              <IconKarma />
+              <FontAwesomeIcon
+                icon={faShoppingCart}
+                className="shrink-0 text-2xl"
+              />
+            </div>
+            <span className="font-medium">2628</span>
+          </Link>
         </LayoutGroup>
-
-        <a
-          href="#"
-          className="flex h-14 items-center gap-3 overflow-clip rounded-xl bg-coal px-6 text-paper shadow-md shadow-black/50 transition-transform duration-500 ease-in-out hover:scale-103 dark:bg-paper dark:text-coal group">
-          <div className="flex translate-y-9 flex-col items-center gap-12 transition-transform group-hover:-translate-y-10">
-            <IconKarma />
-            <FontAwesomeIcon
-              icon={faShoppingCart}
-              className="shrink-0 text-2xl"
-            />
-          </div>
-          <span className="font-medium">2628</span>
-        </a>
       </nav>
     </header>
   );
