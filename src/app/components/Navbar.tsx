@@ -88,7 +88,7 @@ export default function Navbar() {
           </div>
           <Link
             href="/shop"
-            className={`flex h-14 items-center gap-3 overflow-clip rounded-xl bg-coal px-6 text-paper shadow-md shadow-black/50 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "dark:bg-paper dark:text-coal" : ""}`}>
+            className={`flex h-14 items-center gap-3 overflow-clip rounded-xl px-6 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "bg-coal text-paper dark:bg-paper dark:text-coal shadow-md shadow-black/50" : ""}`}>
             <div className="flex translate-y-9 flex-col items-center gap-12 transition-transform group-hover:-translate-y-10">
               <IconKarma />
               <FontAwesomeIcon
