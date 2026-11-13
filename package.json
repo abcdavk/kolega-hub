@@ -10,7 +10,13 @@
     "lint:fix": "oxlint --fix"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-brands-svg-icons": "^7.3.1",
+    "@fortawesome/free-regular-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
     "@tailwindcss/postcss": "^4.3.5",
+    "motion": "^14.13.0",
     "next": "16.4.3",
     "postcss": "^8.5.32",
     "react": "19.3.0",
@@ -22,6 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "oxlint": "^1.90.0",
+    "prettier": "^3.10.1",
     "tailwindcss": "^4.3.5",
     "typescript": "^5"
   }
