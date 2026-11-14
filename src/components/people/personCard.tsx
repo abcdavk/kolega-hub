@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { RiStarFill } from "@remixicon/react";
 import IconKarma from "../../app/icons/karma";
-
+import ReviewForm from "@/components/ui/reviewForm";
 interface PersonCardProps {
   name: string;
   position: string;
@@ -30,6 +31,8 @@ export function Badge({ texts }: BadgeProps) {
 }
 
 export default function PersonCard({ name, position, score }: PersonCardProps) {
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+
   return (
     <div className="flex h-full flex-col rounded-2xl bg-coal dark:bg-paper p-3">
       {/* HEADER */}
@@ -53,8 +56,11 @@ export default function PersonCard({ name, position, score }: PersonCardProps) {
       <Badge texts={["Problem Solver", "High Empathy", "Code Wizard"]} />
 
       {/* GIVE RATING BUTTON */}
-      <button className="mt-auto w-full h-12 flex rounded-lg bg-paper dark:bg-coal items-center px-4 text-md hover:scale-102 hover:translate-y-1 transition-transform duration-300 ease-out cursor-pointer group overflow-clip">
-        <p className="text-coal dark:text-paper font-medium">Give Rating</p>
+      <button
+        type="button"
+        onClick={() => setIsReviewFormOpen(true)}
+        className="mt-auto w-full h-12 flex rounded-lg bg-paper dark:bg-coal items-center px-4 text-md hover:scale-102 hover:translate-y-1 transition-transform duration-300 ease-out cursor-pointer group overflow-clip">
+        <p className="text-white font-medium text-sm">Give Rating</p>
         <div className="ml-auto flex items-center gap-1">
           <div className="flex flex-col gap-4 translate-y-15 group-hover:-translate-y-25 transition-transform duration-1000 ease-out">
             <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
@@ -67,6 +73,12 @@ export default function PersonCard({ name, position, score }: PersonCardProps) {
           <p className="text-coal dark:text-paper font-medium">500</p>
         </div>
       </button>
+      {isReviewFormOpen && (
+        <ReviewForm
+          personName={name}
+          onClose={() => setIsReviewFormOpen(false)}
+        />
+      )}
     </div>
   );
 }
