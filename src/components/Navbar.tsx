@@ -13,7 +13,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { usePathname } from "next/navigation";
 import { motion, LayoutGroup } from "motion/react";
-import IconKarma from "../icons/karma";
+import IconKarma from "../app/icons/karma";
 import Link from "next/link";
 
 export default function Navbar() {
