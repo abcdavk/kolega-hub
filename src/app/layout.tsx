@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="h-full antialiased"
+      suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -27,12 +30,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col transition-colors duration-1000 ease-in-out">
         <Navbar />
-        <div className="flex min-h-screen flex-col bg-paper font-sans dark:bg-coal">
-          <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-8 py-16">
-            {children}
-          </main>
+        <div className="flex min-h-screen flex-col bg-paper font-sans dark:bg-coal transition-colors duration-1000 ease-in-out">
+          <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-8 py-0 md:py-16">{children}</main>
         </div>
       </body>
     </html>

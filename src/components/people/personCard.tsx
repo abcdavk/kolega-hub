@@ -17,7 +17,7 @@ export function Badge({ texts }: BadgeProps) {
   const styles = ["-rotate-2 bg-red-300", "rotate-2 bg-purple-400", "-rotate-2 bg-green-300"];
 
   return (
-    <div className="mt-3 grid w-fit grid-cols-2 items-start gap-2">
+    <div className="my-4 grid w-fit grid-cols-2 items-start gap-2">
       {texts.map((text, index) => (
         <div
           key={`${text}-${index}`}
@@ -47,16 +47,23 @@ export default function PersonCard({ name, position, score }: PersonCardProps) {
         <div className="ml-auto flex items-center gap-1">
           <RiStarFill className="text-paper dark:text-coal" />
           {/* SCORE */}
-          <p className="text-lg text-paper dark:text-coal">{score.toFixed(1)}</p>
+          <p className="font-medium text-lg text-paper dark:text-coal">{score.toFixed(1)}</p>
         </div>
       </div>
       <Badge texts={["Problem Solver", "High Empathy", "Code Wizard"]} />
 
       {/* GIVE RATING BUTTON */}
-      <button className="mt-4 w-full flex rounded-lg bg-paper dark:bg-coal py-3 px-4 text-md">
+      <button className="mt-auto w-full h-12 flex rounded-lg bg-paper dark:bg-coal items-center px-4 text-md hover:scale-102 hover:translate-y-1 transition-transform duration-300 ease-out cursor-pointer group overflow-clip">
         <p className="text-coal dark:text-paper font-medium">Give Rating</p>
         <div className="ml-auto flex items-center gap-1">
-          <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
+          <div className="flex flex-col gap-4 translate-y-15 group-hover:-translate-y-25 transition-transform duration-1000 ease-out">
+            <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
+            <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
+            <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
+            <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
+            <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
+            <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
+          </div>
           <p className="text-coal dark:text-paper font-medium">500</p>
         </div>
       </button>

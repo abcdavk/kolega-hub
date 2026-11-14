@@ -20,14 +20,18 @@ export default function Home() {
 
   return (
     <div className="mt-3 flex flex-col gap-4">
-      <SearchBar value={search} onChange={setSearch} />
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+      />
       <div className="grid grid-cols-1 gap-4 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3">
         {filteredPeople.map((person) => (
-          <PersonCard key={person.name} {...person} />
+          <PersonCard
+            key={person.name}
+            {...person}
+          />
         ))}
-        {filteredPeople.length === 0 && (
-          <p className="text-sm text-coal/60 dark:text-paper/60">No people found.</p>
-        )}
+        {filteredPeople.length === 0 && <p className="text-sm text-coal/60 dark:text-paper/60">No people found.</p>}
       </div>
     </div>
   );
