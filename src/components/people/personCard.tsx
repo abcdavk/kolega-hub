@@ -65,7 +65,7 @@ export default function PersonCard({ name, position, score }: PersonCardProps) {
       <button
         type="button"
         onClick={() => setIsReviewFormOpen(true)}
-        className="mt-4 w-full flex rounded-lg bg-coal py-3 px-2">
+        className="mt-4 w-full active:translate-y-0.5 transition-all hover:bg-coal/85 flex rounded-lg bg-coal py-3 px-2">
         <p className="text-white font-medium text-sm">Give Rating</p>
         <div className="ml-auto flex items-center gap-1">
           <IconKarma className="block h-4 w-4 bg-gray-200" />
