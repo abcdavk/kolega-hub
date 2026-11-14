@@ -1,26 +1,74 @@
+@import url("https://fonts.cdnfonts.com/css/satoshi");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap");
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --paper: #f2f0e3;
+  --coal: #1f1f1f;
+  --background: var(--paper);
+  --foreground: var(--coal);
+
+  --font-satoshi: "Satoshi", Arial, sans-serif;
+  --font-fraunces: "Fraunces", Georgia, serif;
+  --font-monospace: ui-monospace, Monaco, Consolas, monospace;
 }
 
 @theme inline {
+  --color-paper: var(--paper);
+  --color-coal: var(--coal);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-satoshi);
+  --font-serif: var(--font-fraunces);
+  --font-mono: var(--font-monospace);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  color-scheme: dark;
+  --background: var(--coal);
+  --foreground: var(--paper);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-satoshi);
+}
+
+@theme {
+  --animate-wiggle: wiggle 1s ease-in-out infinite;
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(-3deg);
+    }
+    50% {
+      transform: rotate(3deg);
+    }
+  }
+
+  --animate-wiggle-slow: wiggle-slow 5s ease-in-out infinite;
+  @keyframes wiggle-slow {
+    0%,
+    100% {
+      transform: rotate(-1deg);
+    }
+    50% {
+      transform: rotate(1deg);
+    }
+  }
+
+  --animate-spin-y: spin-y 3s ease-in-out infinite;
+  @keyframes spin-y {
+    0%,
+    100% {
+      transform: rotateY(180deg);
+    }
+    50% {
+      transform: rotateY(-180deg);
+    }
+  }
 }
