@@ -9,6 +9,25 @@ type Title = {
   color: string;
 };
 
+type Stat = {
+  id: string;
+  label: string;
+};
+
+const stats: Stat[] = [
+  { id: "technical", label: "Technical & Execution Skills" },
+  { id: "collaboration", label: "Collaboration & Communication" },
+  { id: "problemSolving", label: "Problem Solving Under Pressure" },
+  { id: "mentorship", label: "Mentorship & Culture Contribution" },
+];
+
+const ratingLabel = (rating: number) => {
+  if (rating >= 4.5) return "Excellent";
+  if (rating >= 3.5) return "Good";
+  if (rating >= 2.5) return "Average";
+  return "Needs Improvement";
+};
+
 export default function Profile() {
   const titles: Title[] = [
     {
@@ -71,9 +90,19 @@ export default function Profile() {
     if (droppedInside(visibleDropZoneRef, info.point)) addVisibleTitle(id);
   };
 
+  const statRatings: Record<string, number> = {
+    technical: 5,
+    collaboration: 5,
+    problemSolving: 4,
+    mentorship: 5,
+  };
+
+  const overallRating =
+    Math.floor((stats.reduce((sum, stat) => sum + statRatings[stat.id], 0) / stats.length) * 10) / 10;
+
   return (
     <section>
-      <h2 className="text-coal-lighter text-lg mb-4 font-bold uppercase">Identity</h2>
+      <h2 className="text-coal dark:text-paper text-lg mb-4 font-bold uppercase">Identity</h2>
       <div className="flex gap-4">
         <div className="min-w-42 h-auto flex bg-coal text-paper dark:bg-paper dark:text-coal rounded-xl justify-center items-center">
           PP
@@ -84,21 +113,21 @@ export default function Profile() {
             type="text"
             name="name"
             id="name"
-            className="w-full border border-paper/30 rounded-lg py-3 px-3 outline-none"
+            className="w-full border border-coal/30 dark:border-paper/30 rounded-lg py-3 px-3 outline-none"
           />
           <p className="my-2">Division</p>
           <input
             type="text"
             name="name"
             id="name"
-            className="w-full border border-paper/30 rounded-lg py-3 px-3 outline-none"
+            className="w-full border border-coal/30 dark:border-paper/30 rounded-lg py-3 px-3 outline-none"
           />
         </div>
       </div>
-      <h2 className="text-coal-lighter text-lg my-4 font-bold uppercase">Your Titles</h2>
+      <h2 className="text-coal dark:text-paper text-lg my-4 font-bold uppercase">Your Titles</h2>
       <p className="mb-2 font-medium">
         Visible{" "}
-        <span className="text-coal-lighter">
+        <span className="text-paper-darker dark:text-coal-lighter">
           ({visibleTitleIds.length}/{maxVisibleTitle})
         </span>
       </p>
@@ -178,6 +207,60 @@ export default function Profile() {
         className="mt-2 min-h-5 text-sm text-coal-lighter dark:text-paper-darker">
         {titleMessage || "Drag to arrange visible titles. Use × to hide a title or drag one from Owned to show it."}
       </p>
+
+      <h2 className="text-coal dark:text-paper text-lg my-4 font-bold uppercase">Your Stats</h2>
+      <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+        {stats.map((stat) => {
+          const rating = statRatings[stat.id];
+
+          return (
+            <div key={stat.id}>
+              <div className="mb-2 flex items-center justify-between gap-4">
+                <p>{stat.label}</p>
+                <span className="text-coal-lighter dark:text-paper-darker">{rating.toFixed(1)} / 5.0</span>
+              </div>
+              <div
+                role="img"
+                aria-label={`${stat.label}: ${rating.toFixed(1)} out of 5`}
+                className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((value) => {
+                  const isActive = value <= Math.round(rating);
+
+                  return (
+                    <span
+                      key={value}
+                      className={`h-2 flex-1 rounded-full border border-paper-darker ${isActive ? "bg-green-300" : "bg-paper"}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-6 flex flex-col items-center gap-2">
+        <p className="text-sm uppercase">Overall Rating</p>
+        <div
+          className="flex gap-2"
+          role="img"
+          aria-label={`${overallRating.toFixed(1)} out of 5 stars`}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <svg
+              key={star}
+              viewBox="0 0 24 24"
+              className="h-9 w-9 text-coal dark:text-paper"
+              fill={star <= Math.floor(overallRating) ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round">
+              <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8L12 2.5z" />
+            </svg>
+          ))}
+        </div>
+        <p className="text-sm">
+          {overallRating.toFixed(1)} ({ratingLabel(overallRating)})
+        </p>
+      </div>
     </section>
   );
 }

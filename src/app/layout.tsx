@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col transition-colors duration-1000 ease-in-out">
         <Navbar />
         <div className="flex min-h-screen flex-col bg-paper font-sans dark:bg-coal transition-colors duration-1000 ease-in-out">
-          <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-8 py-0 md:py-16 pb-32 md:pb-0">
+          <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-8 py-0 md:py-16 pb-32 md:pb-0np">
             {children}
           </main>
         </div>
