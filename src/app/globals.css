@@ -7,7 +7,9 @@
 :root {
   color-scheme: light;
   --paper: #f2f0e3;
+  --paper-darker: #aca999;
   --coal: #1f1f1f;
+  --coal-lighter: #575757;
   --background: var(--paper);
   --foreground: var(--coal);
 
@@ -19,6 +21,8 @@
 @theme inline {
   --color-paper: var(--paper);
   --color-coal: var(--coal);
+  --color-paper-darker: var(--paper-darker);
+  --color-coal-lighter: var(--coal-lighter);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-satoshi);
