@@ -28,9 +28,13 @@ export default function LevelProgress({
         className="relative flex md:h-13 w-full md:w-auto flex-1 items-center overflow-hidden rounded-lg border border-coal/70 p-1 dark:border-paper/70">
         <div
           aria-hidden="true"
-            className="absolute inset-y-1 left-1 rounded-md bg-paper transition-[width]"
-          style={{ width: `${progress}%` }}
-        />
+          className="absolute inset-1 overflow-hidden rounded-md"
+        >
+          <div
+            className="h-full rounded-md bg-paper transition-[width]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
           <span className="relative z-10 px-2 text-md font-medium text-coal">Level {level}</span>
         <span className="absolute inset-0 z-20 flex items-center justify-center">
           <span className="rounded-md bg-coal px-2 py-1 text-xs font-medium text-paper sm:text-sm">

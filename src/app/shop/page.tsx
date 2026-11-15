@@ -11,14 +11,16 @@ export default function Shop() {
     { namaBarang: "Kopi Kapal Api", harga: 1000 },
     { namaBarang: "Rokok", harga: 50000 },
     { namaBarang: "Sandwich", harga: 10000 },
-    { namaBarang: "Voucher Makan siang", harga: 25000 }
+    { namaBarang: "Voucher Makan siang", harga: 25000 },
   ];
 
   const filteredBarang = barang.filter((item) =>
-    `${item.namaBarang} ${item.harga}`
-      .toLowerCase()
-      .includes(search.trim().toLowerCase()),
+    `${item.namaBarang} ${item.harga}`.toLowerCase().includes(search.trim().toLowerCase()),
   );
+
+  const handleClaim = () => {
+    console.log("Claimed!");
+  };
 
   return (
     <>
@@ -29,7 +31,12 @@ export default function Shop() {
             Collect points from feedback and claim them once the target has been reached.
           </p>
 
-          <LevelProgress level={1} points={10} pointsToNextLevel={50} />
+          <LevelProgress
+            level={1}
+            points={50}
+            pointsToNextLevel={50}
+            onClaim={handleClaim}
+          />
         </div>
         <div className="mt-4 mb-4">
           <h1 className="text-xl font-semibold text-coal tracking-wide dark:text-paper">Karma Shop</h1>
