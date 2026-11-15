@@ -30,6 +30,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "mermaid-erd-cli": "^0.3.0",
+    "mysql2": "^3.24.6",
     "oxlint": "^1.90.0",
     "prettier": "^3.10.1",
     "tailwindcss": "^4.3.5",
