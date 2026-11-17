@@ -16,7 +16,7 @@ never return password hashes.
 | `POST` | `/api/auth/register` | Public | Create an account (`name`, `email`, `password`) |
 | `POST` | `/api/auth/login` | Public | Log in (`email`, `password`) |
 | `GET` | `/api/me` | Token | Get the authenticated user's profile and balances |
-| `GET` | `/api/users` | Public | List public user rating summaries |
+| `GET` | `/api/users` | Public | List public user details, rating summaries, and visible titles |
 | `GET` | `/api/users/:id` | Public | Get a public rating summary and owned titles |
 | `GET` | `/api/reviews?reviewee_id=:id` | Public | List reviews; optional `reviewee_id` and `reviewer_id` filters |
 | `POST` | `/api/reviews` | Token | Submit a review and appreciation IDs |

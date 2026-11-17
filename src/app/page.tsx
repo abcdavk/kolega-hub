@@ -1,21 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PersonCard from "@/components/people/personCard";
 import SearchBar from "@/components/ui/SearchBar";
 
+interface Person {
+  user_id: number;
+  name: string;
+  division: string | null;
+  avatar_url: string | null;
+  avg_overall: number | null;
+  titles: string[];
+}
+
+interface UsersResponse {
+  users?: Person[];
+  error?: string;
+}
+
 export default function Home() {
   const [search, setSearch] = useState("");
-  const people = [
-    { name: "John cow we", position: "CEO", score: 4.5 },
-    { name: "pria so low", position: "Designer", score: 4.8 },
-    { name: "isnan cawapres", position: "Developer", score: 4.2 },
-    { name: "fufufafa", position: "Product Manager", score: 4.7 },
-    { name: "abner rakabuming raka", position: "Marketing", score: 4.4 },
-    { name: "si KERJA tuh", position: "Analyst", score: 4.6 },
-  ];
+  const [people, setPeople] = useState<Person[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadPeople() {
+      try {
+        const response = await fetch("/api/users", { signal: controller.signal });
+        const data = (await response.json()) as UsersResponse;
+        if (!response.ok) throw new Error(data.error ?? "Failed to load people.");
+        if (!Array.isArray(data.users)) throw new Error("The people response is invalid.");
+        setPeople(data.users);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setError(error instanceof Error ? error.message : "Failed to load people.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    }
+
+    void loadPeople();
+    return () => controller.abort();
+  }, []);
+
   const filteredPeople = people.filter((person) =>
-    `${person.name} ${person.position}`.toLowerCase().includes(search.trim().toLowerCase()),
+    `${person.name} ${person.division ?? ""}`.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
   return (
@@ -27,11 +60,25 @@ export default function Home() {
       <div className="grid grid-cols-1 gap-4 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3">
         {filteredPeople.map((person) => (
           <PersonCard
-            key={person.name}
-            {...person}
+            key={person.user_id}
+            name={person.name}
+            division={person.division}
+            avatarUrl={person.avatar_url}
+            score={person.avg_overall ?? 0}
+            titles={person.titles}
           />
         ))}
-        {filteredPeople.length === 0 && <p className="text-sm text-coal/60 dark:text-paper/60">No people found.</p>}
+        {isLoading && <p className="text-sm text-coal/60 dark:text-paper/60">Memuat semua orang...</p>}
+        {error && (
+          <p
+            role="alert"
+            className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
+        {!isLoading && !error && filteredPeople.length === 0 && (
+          <p className="text-sm text-coal/60 dark:text-paper/60">Lagi sepi nih..</p>
+        )}
       </div>
     </div>
   );

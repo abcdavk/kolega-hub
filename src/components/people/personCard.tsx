@@ -6,8 +6,10 @@ import IconKarma from "../../app/icons/karma";
 import ReviewForm from "@/components/ui/reviewForm";
 interface PersonCardProps {
   name: string;
-  position: string;
+  division: string | null;
+  avatarUrl: string | null;
   score: number;
+  titles: string[];
 }
 
 interface BadgeProps {
@@ -30,8 +32,15 @@ export function Badge({ texts }: BadgeProps) {
   );
 }
 
-export default function PersonCard({ name, position, score }: PersonCardProps) {
+export default function PersonCard({ name, division, avatarUrl, score, titles }: PersonCardProps) {
   const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="flex h-full flex-col rounded-2xl bg-coal dark:bg-paper p-3">
@@ -39,12 +48,20 @@ export default function PersonCard({ name, position, score }: PersonCardProps) {
       <div className="flex items-center gap-3">
         {/* LOGO */}
         <div className="h-14 w-14 rounded-lg bg-paper dark:bg-coal flex items-center justify-center text-coal dark:text-paper">
-          <h1>PP</h1>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={`${name}'s avatar`}
+              className="h-full w-full rounded-lg object-cover"
+            />
+          ) : (
+            <span>{initials}</span>
+          )}
         </div>
         {/* NAME */}
         <div className="flex flex-col">
           <h1 className="text-xl text-paper dark:text-coal font-serif font-bold">{name}</h1>
-          <p className="text-sm text-paper/75 dark:text-coal/75">{position}</p>
+          <p className="text-sm text-paper/75 dark:text-coal/75">{division || "No division"}</p>
         </div>
 
         <div className="ml-auto flex items-center gap-1">
@@ -53,7 +70,7 @@ export default function PersonCard({ name, position, score }: PersonCardProps) {
           <p className="font-medium text-lg text-paper dark:text-coal">{score.toFixed(1)}</p>
         </div>
       </div>
-      <Badge texts={["Problem Solver", "High Empathy", "Code Wizard"]} />
+      {titles.length > 0 && <Badge texts={titles} />}
 
       {/* GIVE RATING BUTTON */}
       <button
