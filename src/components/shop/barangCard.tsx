@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import IconKarma from "../../app/icons/karma";
+import BuyConfirmPopup from "./buyConfirmPopup";
 
 interface Barangprops {
     namaBarang: string;
@@ -6,6 +10,8 @@ interface Barangprops {
 }
 
 export default function BarangCard({namaBarang, harga}: Barangprops) {
+  const [isBuyPopupOpen, setIsBuyPopupOpen] = useState(false);
+
   return (
     <>
       <div className="flex h-full flex-col rounded-xl bg-coal dark:bg-paper p-3 gap-2">
@@ -16,6 +22,7 @@ export default function BarangCard({namaBarang, harga}: Barangprops) {
         <h2 className="text-2xl font-medium tracking-wide text-paper dark:text-coal">{namaBarang}</h2>
         <button
           type="button"
+          onClick={() => setIsBuyPopupOpen(true)}
           className="mt-auto w-full h-12 flex rounded-lg bg-paper dark:bg-coal items-center px-4 text-md hover:scale-102 hover:translate-y-1 transition-transform duration-300 ease-out cursor-pointer group overflow-clip">
           <p className="text-coal dark:text-paper tracking-wide font-medium text-lg">Exchange</p>
           <div className="ml-auto flex items-center gap-1">
@@ -31,6 +38,12 @@ export default function BarangCard({namaBarang, harga}: Barangprops) {
           </div>
         </button>
       </div>
+      {isBuyPopupOpen && (
+        <BuyConfirmPopup
+          namaBarang={namaBarang}
+          onClose={() => setIsBuyPopupOpen(false)}
+        />
+      )}
     </>
   );
 }
