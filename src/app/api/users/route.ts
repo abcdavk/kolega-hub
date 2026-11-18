@@ -17,7 +17,9 @@ type UserSummary = RowDataPacket & {
 
 type VisibleTitle = RowDataPacket & {
   user_id: number;
+  id: number;
   name: string;
+  color_hex: string;
 };
 
 export async function GET() {
@@ -35,11 +37,11 @@ export async function GET() {
        GROUP BY u.id, u.name, u.division, u.avatar_url ORDER BY u.name`,
     );
 
-    const titlesByUser = new Map<number, string[]>();
+    const titlesByUser = new Map<number, Omit<VisibleTitle, "user_id">[]>();
     if (users.length > 0) {
       const userIds = users.map((user) => user.user_id);
       const [titles] = await getDb().execute<VisibleTitle[]>(
-        `SELECT ut.user_id, t.name
+        `SELECT ut.user_id, t.id, t.name, t.color_hex
          FROM user_titles ut
          JOIN titles t ON t.id = ut.title_id
          WHERE ut.is_visible = 1 AND ut.user_id IN (${userIds.map(() => "?").join(", ")})
@@ -48,7 +50,11 @@ export async function GET() {
       );
       for (const title of titles) {
         const userTitles = titlesByUser.get(title.user_id) ?? [];
-        userTitles.push(title.name);
+        userTitles.push({
+          id: title.id,
+          name: title.name,
+          color_hex: title.color_hex,
+        });
         titlesByUser.set(title.user_id, userTitles);
       }
     }

@@ -11,7 +11,11 @@ interface Person {
   avatar_url: string | null;
   total_reviews: number;
   avg_overall: number | null;
-  titles: string[];
+  titles: {
+    id: number;
+    name: string;
+    color_hex: string;
+  }[];
 }
 
 interface UsersResponse {
