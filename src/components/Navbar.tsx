@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { faAddressCard } from "@fortawesome/free-regular-svg-icons";
 import {
   faMoon,
-  faRightFromBracket,
   faRightToBracket,
   faShoppingCart,
   faSun,
@@ -19,6 +18,7 @@ import IconKarma from "../app/icons/karma";
 import Link from "next/link";
 import AuthForm from "@/components/ui/authForm";
 import {
+  AUTH_SESSION_CHANGE_EVENT,
   notifyAuthSessionChange,
   OPEN_AUTH_DIALOG_EVENT,
 } from "@/lib/authEvents";
@@ -43,7 +43,7 @@ export default function Navbar() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const karmaPoints = 2628;
+  const [karmaPoints, setKarmaPoints] = useState(0);
 
   const isPeoplePage = pathname === "/";
   const isProfilePage = pathname === "/profile";
@@ -58,10 +58,37 @@ export default function Navbar() {
       const token = localStorage.getItem("token");
       setAuthToken(token);
       setIsAuthDialogOpen(!token);
+      if (token) {
+        fetch("/api/me", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" })
+          .then(async (response) => {
+            const data = await response.json();
+            if (response.ok) setKarmaPoints(Number(data.user?.karma_balance ?? 0));
+          })
+          .catch(() => undefined);
+      }
     } catch {
       setIsAuthDialogOpen(true);
       setSessionError("Browser tidak dapat mengakses penyimpanan login.");
     }
+  }, []);
+
+  useEffect(() => {
+    const handleSessionChange = (event: WindowEventMap[typeof AUTH_SESSION_CHANGE_EVENT]) => {
+      const token = event.detail;
+      setAuthToken(token);
+      setKarmaPoints(0);
+      if (!token) return;
+
+      fetch("/api/me", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" })
+        .then(async (response) => {
+          const data = await response.json();
+          if (response.ok) setKarmaPoints(Number(data.user?.karma_balance ?? 0));
+        })
+        .catch(() => setSessionError("Gagal memuat saldo karma."));
+    };
+
+    window.addEventListener(AUTH_SESSION_CHANGE_EVENT, handleSessionChange);
+    return () => window.removeEventListener(AUTH_SESSION_CHANGE_EVENT, handleSessionChange);
   }, []);
 
   useEffect(() => {
@@ -89,18 +116,6 @@ export default function Navbar() {
     document.documentElement.classList.toggle("dark", nextIsDark);
     localStorage.setItem("theme", nextIsDark ? "dark" : "light");
     setIsDark(nextIsDark);
-  };
-
-  const logout = () => {
-    try {
-      localStorage.removeItem("token");
-      setAuthToken(null);
-      notifyAuthSessionChange(null);
-      setSessionError(null);
-      setIsAuthDialogOpen(true);
-    } catch {
-      setSessionError("Gagal menghapus sesi login dari browser.");
-    }
   };
 
   const navItems = [
@@ -140,19 +155,21 @@ export default function Navbar() {
                 aria-hidden="true"
               />
             </button>
-            <button
-              type="button"
-              onClick={authToken ? logout : () => setIsAuthDialogOpen(true)}
-              aria-label={authToken ? "Keluar" : "Login"}
-              title={authToken ? "Keluar" : "Login"}
-              className="flex h-14 items-center justify-center gap-2 rounded-xl px-3 transition-transform duration-300 hover:scale-105 cursor-pointer">
-              <FontAwesomeIcon
-                icon={authToken ? faRightFromBracket : faRightToBracket}
-                className="text-xl"
-                aria-hidden="true"
-              />
-              <span className="text-sm font-medium">{authToken ? "Keluar" : "Login"}</span>
-            </button>
+            {!authToken && (
+              <button
+                type="button"
+                onClick={() => setIsAuthDialogOpen(true)}
+                aria-label="Login"
+                title="Login"
+                className="flex h-14 items-center justify-center gap-2 rounded-xl px-3 transition-transform duration-300 hover:scale-105 cursor-pointer">
+                <FontAwesomeIcon
+                  icon={faRightToBracket}
+                  className="text-xl"
+                  aria-hidden="true"
+                />
+                <span className="text-sm font-medium">Login</span>
+              </button>
+            )}
           </div>
           <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-2 bg-paper px-4 py-6 dark:bg-coal md:static md:z-auto md:contents">
             <div className="flex gap-2 font-medium md:flex-none md:justify-start">
@@ -225,19 +242,21 @@ export default function Navbar() {
                   aria-hidden="true"
                 />
               </button>
-              <button
-                type="button"
-                onClick={authToken ? logout : () => setIsAuthDialogOpen(true)}
-                aria-label={authToken ? "Keluar" : "Login"}
-                title={authToken ? "Keluar" : "Login"}
-                className="flex h-14 items-center justify-center gap-2 rounded-xl px-3 transition-transform duration-300 hover:scale-105 cursor-pointer">
-                <FontAwesomeIcon
-                  icon={authToken ? faRightFromBracket : faRightToBracket}
-                  className="text-xl"
-                  aria-hidden="true"
-                />
-                <span className="text-sm font-medium">{authToken ? "Keluar" : "Login"}</span>
-              </button>
+              {!authToken && (
+                <button
+                  type="button"
+                  onClick={() => setIsAuthDialogOpen(true)}
+                  aria-label="Login"
+                  title="Login"
+                  className="flex h-14 items-center justify-center gap-2 rounded-xl px-3 transition-transform duration-300 hover:scale-105 cursor-pointer">
+                  <FontAwesomeIcon
+                    icon={faRightToBracket}
+                    className="text-xl"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium">Login</span>
+                </button>
+              )}
               <Link
                 href="/shop"
                 className={`flex h-14 max-md:w-14 max-md:justify-center max-md:px-0 items-center gap-3 overflow-clip rounded-xl px-6 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "bg-coal text-paper dark:bg-paper dark:text-coal shadow-md shadow-black/50" : ""}`}>

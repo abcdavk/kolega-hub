@@ -102,7 +102,7 @@ export default function PersonCard({
             <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
             <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
           </div>
-          <p className="text-coal dark:text-paper font-medium">500</p>
+          <p className="text-coal dark:text-paper font-medium">250</p>
         </div>
       </button>
       {isReviewFormOpen && (
