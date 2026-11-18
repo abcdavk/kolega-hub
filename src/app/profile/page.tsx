@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { motion, Reorder, type PanInfo } from "motion/react";
-import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   AUTH_SESSION_CHANGE_EVENT,
@@ -65,6 +65,12 @@ export default function Profile() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [me, setMe] = useState<MeUser | null>(null);
+  const [name, setName] = useState("");
+  const [division, setDivision] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
+  const nameRef = useRef("");
+  const divisionRef = useRef("");
   const [titles, setTitles] = useState<Title[]>([]);
   const [statRatings, setStatRatings] = useState<Record<string, number>>({
     technical: 0,
@@ -119,6 +125,10 @@ export default function Profile() {
     setSessionError(null);
     if (!token) {
       setMe(null);
+      setName("");
+      setDivision("");
+      nameRef.current = "";
+      divisionRef.current = "";
       setTitles([]);
       setVisibleTitleIds([]);
       setStatRatings({ technical: 0, collaboration: 0, problemSolving: 0, mentorship: 0 });
@@ -134,6 +144,10 @@ export default function Profile() {
       if (!meResponse.ok) throw new Error(meData.error ?? "Gagal memuat profil.");
       const profile = meData.user as MeUser;
       setMe(profile);
+      setName(profile.name);
+      setDivision(profile.division ?? "");
+      nameRef.current = profile.name;
+      divisionRef.current = profile.division ?? "";
 
       const userResponse = await fetch(`/api/users/${profile.id}`, { cache: "no-store" });
       const userData = await userResponse.json();
@@ -198,6 +212,91 @@ export default function Profile() {
     }
   };
 
+  const saveProfileField = async (field: "name" | "division") => {
+    if (!authToken) return;
+    const value = field === "name" ? name.trim() : division.trim();
+    if (field === "name" && !value) {
+      setProfileSaveError("Nama wajib diisi.");
+      return;
+    }
+
+    setIsSavingProfile(true);
+    setProfileSaveError(null);
+    try {
+      const response = await fetch("/api/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ [field]: value || null }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Gagal menyimpan profil.");
+
+      if (field === "name") {
+        const savedName = data.name as string;
+        setMe((current) => current ? { ...current, name: savedName } : current);
+        setName(savedName);
+        nameRef.current = savedName;
+      } else {
+        const savedDivision = data.division as string | null;
+        setMe((current) => current ? { ...current, division: savedDivision } : current);
+        setDivision(savedDivision ?? "");
+        divisionRef.current = savedDivision ?? "";
+      }
+    } catch (error) {
+      setProfileSaveError(error instanceof Error ? error.message : "Gagal menyimpan profil.");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authToken || !me || isLoadingProfile || isSavingProfile || profileSaveError) return;
+
+    const trimmedName = name.trim();
+    const trimmedDivision = division.trim();
+    if (trimmedName === me.name && trimmedDivision === (me.division ?? "")) return;
+    if (!trimmedName) {
+      setProfileSaveError("Nama wajib diisi.");
+      return;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      setIsSavingProfile(true);
+      try {
+        const response = await fetch("/api/me", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ name: trimmedName, division: trimmedDivision }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? "Gagal menyimpan profil.");
+
+        const savedName = data.name as string;
+        const savedDivision = data.division as string | null;
+        setMe((current) => current ? { ...current, name: savedName, division: savedDivision } : current);
+        if (nameRef.current.trim() === trimmedName) setName(savedName);
+        if (divisionRef.current.trim() === trimmedDivision) setDivision(savedDivision ?? "");
+      } catch (error) {
+        if (
+          nameRef.current.trim() === trimmedName &&
+          divisionRef.current.trim() === trimmedDivision
+        ) {
+          setProfileSaveError(error instanceof Error ? error.message : "Gagal menyimpan profil.");
+        }
+      } finally {
+        setIsSavingProfile(false);
+      }
+    }, 5000);
+
+    return () => window.clearTimeout(timeout);
+  }, [authToken, division, isLoadingProfile, isSavingProfile, me, name, profileSaveError]);
+
   return (
     <section>
       <h2 className="text-coal dark:text-paper text-lg mb-4 font-bold uppercase">Identity</h2>
@@ -216,23 +315,64 @@ export default function Profile() {
         </div>
         <div className="w-full">
           <p className="mb-2">Your Name</p>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            value={me?.name ?? ""}
-            readOnly
-            className="w-full border border-coal/30 dark:border-paper/30 rounded-lg py-3 px-3 outline-none"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              name="name"
+              id="name"
+              maxLength={100}
+              value={name}
+              onChange={(event) => {
+                nameRef.current = event.target.value;
+                setName(event.target.value);
+                setProfileSaveError(null);
+              }}
+              disabled={!authToken || isLoadingProfile}
+              className="w-full border border-coal/30 dark:border-paper/30 rounded-lg py-3 px-3 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => void saveProfileField("name")}
+              disabled={!authToken || isLoadingProfile || isSavingProfile || name.trim() === me?.name}
+              aria-label="Simpan nama"
+              title="Simpan nama"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-coal/30 text-coal hover:bg-coal/10 disabled:cursor-not-allowed disabled:opacity-40 dark:border-paper/30 dark:text-paper dark:hover:bg-paper/10">
+              <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
+            </button>
+          </div>
           <p className="my-2">Division</p>
-          <input
-            type="text"
-            name="division"
-            id="division"
-            value={me?.division ?? ""}
-            readOnly
-            className="w-full border border-coal/30 dark:border-paper/30 rounded-lg py-3 px-3 outline-none"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              name="division"
+              id="division"
+              maxLength={100}
+              value={division}
+              onChange={(event) => {
+                divisionRef.current = event.target.value;
+                setDivision(event.target.value);
+                setProfileSaveError(null);
+              }}
+              disabled={!authToken || isLoadingProfile}
+              className="w-full border border-coal/30 dark:border-paper/30 rounded-lg py-3 px-3 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => void saveProfileField("division")}
+              disabled={!authToken || isLoadingProfile || isSavingProfile || division.trim() === (me?.division ?? "")}
+              aria-label="Simpan division"
+              title="Simpan division"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-coal/30 text-coal hover:bg-coal/10 disabled:cursor-not-allowed disabled:opacity-40 dark:border-paper/30 dark:text-paper dark:hover:bg-paper/10">
+              <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
+            </button>
+          </div>
+          {profileSaveError && (
+            <p
+              role="alert"
+              className="mt-2 text-sm text-red-600">
+              {profileSaveError}
+            </p>
+          )}
         </div>
       </div>
       <h2 className="text-coal dark:text-paper text-lg my-4 font-bold uppercase">Your Titles</h2>
