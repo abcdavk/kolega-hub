@@ -57,7 +57,7 @@ export default function PersonCard({
   return (
     <div className="flex h-full flex-col rounded-2xl bg-coal dark:bg-paper p-3">
       {/* HEADER */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pb-2">
         {/* LOGO */}
         <div className="h-14 w-14 rounded-lg bg-paper dark:bg-coal flex items-center justify-center text-coal dark:text-paper">
           {avatarUrl ? (
@@ -81,7 +81,6 @@ export default function PersonCard({
           {/* SCORE */}
           <div className="text-right">
             <p className="font-medium text-lg text-paper dark:text-coal">{score.toFixed(1)}</p>
-            <p className="text-xs text-paper/60 dark:text-coal/60">{reviewCount} reviews</p>
           </div>
         </div>
       </div>
