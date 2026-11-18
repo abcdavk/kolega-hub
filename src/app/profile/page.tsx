@@ -88,6 +88,9 @@ export default function Profile() {
   const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
   const nameRef = useRef("");
   const divisionRef = useRef("");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [titles, setTitles] = useState<Title[]>([]);
   const [statRatings, setStatRatings] = useState<Record<string, number>>({
     technical: 0,
@@ -310,6 +313,30 @@ export default function Profile() {
     }
   };
 
+  const uploadAvatar = async (file: File) => {
+    if (!authToken) return;
+    setIsUploadingAvatar(true);
+    setAvatarError(null);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const response = await fetch("/api/me/avatar", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Gagal mengupload foto profil.");
+
+      setMe((current) => current ? { ...current, avatar_url: data.avatar_url } : current);
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : "Gagal mengupload foto profil.");
+    } finally {
+      setIsUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
   useEffect(() => {
     if (!authToken || !me || isLoadingProfile || isSavingProfile || profileSaveError) return;
 
@@ -360,15 +387,42 @@ export default function Profile() {
       <h2 className="text-coal dark:text-paper text-lg mb-4 font-bold uppercase">Identity</h2>
       {isLoadingProfile && <p className="mb-3 text-sm text-coal-lighter dark:text-paper-darker">Memuat profil...</p>}
       <div className="flex gap-4">
-        <div className="min-w-42 h-auto flex bg-coal text-paper dark:bg-paper dark:text-coal rounded-xl justify-center items-center">
-          {me?.avatar_url ? (
-            <img
-              src={me.avatar_url}
-              alt={me.name}
-              className="h-full w-full rounded-xl object-cover"
-            />
-          ) : (
-            <span>{me?.name?.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "PP"}</span>
+        <div className="flex shrink-0 flex-col items-center gap-2">
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void uploadAvatar(file);
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={!authToken || isLoadingProfile || isUploadingAvatar}
+            aria-label="Upload foto profil"
+            className="group relative flex h-full w-40 items-center justify-center overflow-hidden rounded-2xl bg-coal text-paper border border-coal dark:border-paper disabled:cursor-not-allowed dark:bg-paper dark:text-coal">
+            {me?.avatar_url ? (
+              <img
+                src={me.avatar_url}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span>{me?.name?.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "PP"}</span>
+            )}
+            {authToken && (
+              <span className="absolute inset-0 flex items-center justify-center bg-black/55 px-3 text-center text-sm font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                {isUploadingAvatar ? "Mengupload..." : "Upload Foto"}
+              </span>
+            )}
+          </button>
+          {avatarError && (
+            <p role="alert" className="max-w-40 text-center text-xs text-red-600">
+              {avatarError}
+            </p>
           )}
         </div>
         <div className="w-full">
