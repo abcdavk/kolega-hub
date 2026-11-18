@@ -1,6 +1,16 @@
 # Kolega Hub
 
+## Creator
+
+- **Nama:** Farell Dio Revianzha/123250008
+- **GitHub:** [frevszz](https://github.com/frevszz)
+- **Nama:** Farieza Davie Rieawan/123250042
+- **GitHub:** [abcdavk](https://github.com/abcdavk)
+- **Repository:** [github.com/frevszz/kolega-hub](https://github.com/frevszz/kolega-hub)
+
 Kolega Hub adalah aplikasi web untuk memberikan apresiasi dan ulasan antar kolega di lingkungan kerja. Pengguna dapat melihat daftar kolega, memberi penilaian berdasarkan beberapa kategori, mengumpulkan karma dan EXP, naik level, mengatur title pada profil, serta menukarkan karma dengan item yang tersedia di toko.
+
+> **Catatan:** Proyek ini dibuat untuk memenuhi tugas praktikum mata kuliah Pemrograman Web.
 
 Proyek dibangun dengan Next.js App Router, React, Tailwind CSS, TypeScript, dan MariaDB/MySQL.
 
@@ -31,11 +41,11 @@ target level = 500 × level
 Contoh:
 
 | Level | Target EXP |
-| --- | ---: |
-| 1 | 500 |
-| 2 | 1.000 |
-| 3 | 1.500 |
-| 10 | 5.000 |
+| ----- | ---------: |
+| 1     |        500 |
+| 2     |      1.000 |
+| 3     |      1.500 |
+| 10    |      5.000 |
 
 Saat milestone berhasil diklaim, reward karma ditambahkan dan EXP dikurangi sebesar target level. Jika poin lebih banyak dari target, kelebihannya tetap tersisa sebagai progres awal untuk level berikutnya.
 
@@ -209,25 +219,25 @@ Endpoint yang dilindungi memerlukan header:
 Authorization: Bearer <token>
 ```
 
-| Method | Endpoint | Akses | Keterangan |
-| --- | --- | --- | --- |
-| `POST` | `/api/auth/register` | Publik | Registrasi akun |
-| `POST` | `/api/auth/login` | Publik | Login dan memperoleh JWT |
-| `GET` | `/api/me` | Token | Profil serta saldo pengguna |
-| `PATCH` | `/api/me` | Token | Memperbarui nama dan divisi |
-| `GET` | `/api/users` | Publik | Daftar kolega |
-| `GET` | `/api/users/:id` | Publik | Detail kolega |
-| `GET` | `/api/reviews` | Publik | Daftar ulasan |
-| `POST` | `/api/reviews` | Token | Membuat ulasan |
-| `GET` | `/api/appreciations` | Publik | Daftar apresiasi |
-| `GET` | `/api/titles` | Publik | Daftar title |
-| `PUT` | `/api/me/titles` | Token | Memperbarui title profil |
-| `POST` | `/api/me/avatar` | Token | Mengunggah avatar |
-| `GET` | `/api/milestones` | Publik/Token | Daftar milestone |
-| `POST` | `/api/milestones/:id/claim` | Token | Klaim milestone |
-| `GET` | `/api/shop-items` | Publik | Daftar barang toko |
-| `GET` | `/api/redemptions` | Token | Riwayat penukaran |
-| `POST` | `/api/redemptions` | Token | Menukar karma dengan barang |
+| Method  | Endpoint                    | Akses        | Keterangan                  |
+| ------- | --------------------------- | ------------ | --------------------------- |
+| `POST`  | `/api/auth/register`        | Publik       | Registrasi akun             |
+| `POST`  | `/api/auth/login`           | Publik       | Login dan memperoleh JWT    |
+| `GET`   | `/api/me`                   | Token        | Profil serta saldo pengguna |
+| `PATCH` | `/api/me`                   | Token        | Memperbarui nama dan divisi |
+| `GET`   | `/api/users`                | Publik       | Daftar kolega               |
+| `GET`   | `/api/users/:id`            | Publik       | Detail kolega               |
+| `GET`   | `/api/reviews`              | Publik       | Daftar ulasan               |
+| `POST`  | `/api/reviews`              | Token        | Membuat ulasan              |
+| `GET`   | `/api/appreciations`        | Publik       | Daftar apresiasi            |
+| `GET`   | `/api/titles`               | Publik       | Daftar title                |
+| `PUT`   | `/api/me/titles`            | Token        | Memperbarui title profil    |
+| `POST`  | `/api/me/avatar`            | Token        | Mengunggah avatar           |
+| `GET`   | `/api/milestones`           | Publik/Token | Daftar milestone            |
+| `POST`  | `/api/milestones/:id/claim` | Token        | Klaim milestone             |
+| `GET`   | `/api/shop-items`           | Publik       | Daftar barang toko          |
+| `GET`   | `/api/redemptions`          | Token        | Riwayat penukaran           |
+| `POST`  | `/api/redemptions`          | Token        | Menukar karma dengan barang |
 
 Respons error menggunakan format JSON:
 
