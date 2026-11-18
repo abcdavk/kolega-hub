@@ -67,8 +67,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       [auth.id, milestoneId],
     );
     await connection.execute(
-      "UPDATE users SET karma_balance = karma_balance + ? WHERE id = ?",
-      [milestone.reward_karma, auth.id],
+      "UPDATE users SET karma_balance = karma_balance + ?, feedback_exp = GREATEST(feedback_exp - ?, 0) WHERE id = ?",
+      [milestone.reward_karma, targetPoints, auth.id],
     );
     await connection.commit();
     return Response.json({

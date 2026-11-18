@@ -1,6 +1,5 @@
 export function milestoneTargetPoints(level: number) {
-  const multiplier = level <= 16 ? 1 : level <= 31 ? 2.5 : 4.5;
-  return Math.ceil(multiplier * level ** 2);
+  return 500 * level;
 }
 
 export function milestoneRewardKarma(level: number) {
