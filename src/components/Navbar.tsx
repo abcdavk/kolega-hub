@@ -121,7 +121,7 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-paper dark:bg-coal md:top-16 transition-colors duration-1000 ease-in-out">
+    <header className="sticky top-0 z-50 w-full bg-paper dark:bg-coal transition-colors duration-1000 ease-in-out">
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-8 py-5">
         <a
           href="#"
