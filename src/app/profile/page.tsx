@@ -384,7 +384,7 @@ export default function Profile() {
 
   return (
     <section>
-      <h2 className="text-coal dark:text-paper text-lg mb-4 font-bold uppercase">Identity</h2>
+      <h2 className="text-coal-lighter dark:text-paper-darker text-lg mb-4 font-bold uppercase">Identity</h2>
       {isLoadingProfile && <p className="mb-3 text-sm text-coal-lighter dark:text-paper-darker">Memuat profil...</p>}
       <div className="flex gap-4">
         <div className="flex shrink-0 flex-col items-center gap-2">
@@ -487,7 +487,7 @@ export default function Profile() {
           )}
         </div>
       </div>
-      <h2 className="text-coal dark:text-paper text-lg my-4 font-bold uppercase">Your Titles</h2>
+      <h2 className="text-coal-lighter dark:text-paper-darker text-lg my-4 font-bold uppercase">Your Titles</h2>
       <p className="mb-2 font-medium">
         Visible{" "}
         <span className="text-paper-darker dark:text-coal-lighter">
@@ -577,7 +577,7 @@ export default function Profile() {
         {titleMessage || "Apply available titles to show them on your profile. You can show up to 3 titles."}
       </p>
 
-      <h2 className="text-coal dark:text-paper text-lg my-4 font-bold uppercase">Your Stats</h2>
+      <h2 className="text-coal-lighter dark:text-paper-darker text-lg my-4 font-bold uppercase">Your Stats</h2>
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
         {stats.map((stat) => {
           const rating = statRatings[stat.id];
