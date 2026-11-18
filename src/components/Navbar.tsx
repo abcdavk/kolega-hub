@@ -173,7 +173,9 @@ export default function Navbar() {
           </div>
           <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-2 bg-paper px-4 py-6 dark:bg-coal md:static md:z-auto md:contents">
             <div className="flex gap-2 font-medium md:flex-none md:justify-start">
-              {navItems.map((item) => (
+              {navItems
+                .filter((item) => item.href === "/" || authToken)
+                .map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}>
@@ -220,17 +222,19 @@ export default function Navbar() {
                     )}
                   </motion.div>
                 </Link>
-              ))}
+                ))}
             </div>
-            <Link
-              href="/shop"
-              aria-label={`Karma points: ${karmaPoints}`}
-              className={`flex h-14 items-center gap-3 rounded-xl border-2 border-coal px-4 transition-all duration-500 ease-in-out hover:scale-103 dark:border-paper group md:hidden ${
-                isShopPage ? "bg-coal text-paper shadow-md shadow-black/50 dark:bg-paper dark:text-coal" : ""
-              }`}>
-              {isShopPage && <IconKarma />}
-              <span className="font-medium">{formatCompactPoints(karmaPoints)}</span>
-            </Link>
+            {authToken && (
+              <Link
+                href="/shop"
+                aria-label={`Karma points: ${karmaPoints}`}
+                className={`flex h-14 items-center gap-3 rounded-xl border-2 border-coal px-4 transition-all duration-500 ease-in-out hover:scale-103 dark:border-paper group md:hidden ${
+                  isShopPage ? "bg-coal text-paper shadow-md shadow-black/50 dark:bg-paper dark:text-coal" : ""
+                }`}>
+                {isShopPage && <IconKarma />}
+                <span className="font-medium">{formatCompactPoints(karmaPoints)}</span>
+              </Link>
+            )}
             <div className="hidden md:flex flex-1 justify-around gap-2 md:flex-none md:justify-start">
               <button
                 type="button"
@@ -257,18 +261,20 @@ export default function Navbar() {
                   <span className="text-sm font-medium">Login</span>
                 </button>
               )}
-              <Link
-                href="/shop"
-                className={`flex h-14 max-md:w-14 max-md:justify-center max-md:px-0 items-center gap-3 overflow-clip rounded-xl px-6 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "bg-coal text-paper dark:bg-paper dark:text-coal shadow-md shadow-black/50" : ""}`}>
-                <div className="flex translate-y-9 flex-col items-center gap-12 transition-transform group-hover:-translate-y-10">
-                  <IconKarma />
-                  <FontAwesomeIcon
-                    icon={faShoppingCart}
-                    className="shrink-0 text-2xl"
-                  />
-                </div>
-                <span className="font-medium max-md:hidden">{karmaPoints}</span>
-              </Link>
+              {authToken && (
+                <Link
+                  href="/shop"
+                  className={`flex h-14 max-md:w-14 max-md:justify-center max-md:px-0 items-center gap-3 overflow-clip rounded-xl px-6 transition-all duration-500 ease-in-out hover:scale-103 border-2 border-coal dark:border-paper group ${isShopPage ? "bg-coal text-paper dark:bg-paper dark:text-coal shadow-md shadow-black/50" : ""}`}>
+                  <div className="flex translate-y-9 flex-col items-center gap-12 transition-transform group-hover:-translate-y-10">
+                    <IconKarma />
+                    <FontAwesomeIcon
+                      icon={faShoppingCart}
+                      className="shrink-0 text-2xl"
+                    />
+                  </div>
+                  <span className="font-medium max-md:hidden">{karmaPoints}</span>
+                </Link>
+              )}
             </div>
           </div>
         </LayoutGroup>
@@ -285,23 +291,28 @@ export default function Navbar() {
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="auth-dialog-title"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setIsAuthDialogOpen(false);
-          }}>
-          <div className="w-full max-w-md rounded-2xl bg-paper p-5 text-coal shadow-xl dark:bg-coal dark:text-paper">
-            <div className="mb-3 flex items-center justify-between gap-4">
-              <h2
-                id="auth-dialog-title"
-                className="font-serif text-2xl font-medium">
-                Selamat datang
-              </h2>
+          aria-labelledby="auth-dialog-title">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-paper p-6 text-coal shadow-2xl sm:p-8 dark:bg-coal dark:text-paper">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-coal-lighter dark:text-paper-darker">
+                  Kolega Hub
+                </p>
+                <h2
+                  id="auth-dialog-title"
+                  className="font-serif text-3xl font-semibold tracking-tight">
+                  Selamat datang
+                </h2>
+                <p className="mt-2 text-sm text-coal-lighter dark:text-paper-darker">
+                  Masuk atau buat akun untuk melanjutkan.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsAuthDialogOpen(false)}
                 aria-label="Tutup form login"
-                className="rounded-lg px-3 py-1 text-sm hover:bg-coal/10 dark:hover:bg-paper/10">
-                Tutup
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xl text-coal-lighter transition-colors hover:bg-coal/10 hover:text-coal dark:text-paper-darker dark:hover:bg-paper/10 dark:hover:text-paper">
+                ×
               </button>
             </div>
             <AuthForm
