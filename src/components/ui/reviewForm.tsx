@@ -1,21 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { RiCloseFill, RiStarFill, RiStarLine } from "@remixicon/react";
 import { motion } from "motion/react";
+import { AUTH_SESSION_CHANGE_EVENT, requestAuthDialog } from "@/lib/authEvents";
 
 interface ReviewFormProps {
+  revieweeId: number;
   personName: string;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-export default function ReviewForm({ personName, onClose }: ReviewFormProps) {
+interface Appreciation {
+  id: number;
+  label: string;
+}
+
+interface AppreciationsResponse {
+  appreciations?: Appreciation[];
+  error?: string;
+}
+
+interface ReviewResponse {
+  error?: string;
+}
+
+export default function ReviewForm({ revieweeId, personName, onClose, onSuccess }: ReviewFormProps) {
+  const [authToken, setAuthToken] = useState<string | null>(null);
   const [rating, setRating] = useState(1);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
-  const [selectedAppreciations, setSelectedAppreciations] = useState(["kinerja", "produktifitas"]);
+  const [appreciations, setAppreciations] = useState<Appreciation[]>([]);
+  const [selectedAppreciations, setSelectedAppreciations] = useState<number[]>([]);
   const [review, setReview] = useState("");
+  const [isLoadingAppreciations, setIsLoadingAppreciations] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const displayedRating = hoveredRating ?? rating;
-  const appreciationOptions = ["Kinerja", "Projek", "Sikap", "Produktifitas", "Responsif"];
   const ratingDescriptions = [
     "",
     "Kurang bagus",
@@ -24,6 +45,96 @@ export default function ReviewForm({ personName, onClose }: ReviewFormProps) {
     "Kolaborasi yang baik bangettt",
     "Hebat luar biasa, alhamdulillah!",
   ];
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadAppreciations() {
+      try {
+        const response = await fetch("/api/appreciations", { signal: controller.signal });
+        const data = (await response.json()) as AppreciationsResponse;
+        if (!response.ok) throw new Error(data.error ?? "Gagal memuat pilihan apresiasi.");
+        if (!Array.isArray(data.appreciations)) {
+          throw new Error("Data pilihan apresiasi tidak valid.");
+        }
+
+        setAppreciations(data.appreciations);
+        setSelectedAppreciations(
+          data.appreciations
+            .filter(({ label }) => label === "kinerja" || label === "produktifitas")
+            .map(({ id }) => id),
+        );
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setError(error instanceof Error ? error.message : "Gagal memuat pilihan apresiasi.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsLoadingAppreciations(false);
+      }
+    }
+
+    void loadAppreciations();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const handleSessionChange = (event: WindowEventMap[typeof AUTH_SESSION_CHANGE_EVENT]) => {
+      setAuthToken(event.detail);
+    };
+
+    window.addEventListener(AUTH_SESSION_CHANGE_EVENT, handleSessionChange);
+    try {
+      setAuthToken(localStorage.getItem("token"));
+    } catch {
+      setError("Browser tidak dapat mengakses penyimpanan login.");
+    }
+
+    return () => window.removeEventListener(AUTH_SESSION_CHANGE_EVENT, handleSessionChange);
+  }, []);
+
+  function handleLoginClick() {
+    onClose();
+    requestAuthDialog();
+  }
+
+  async function submitReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    if (!authToken) {
+      handleLoginClick();
+      return;
+    }
+
+    setIsSubmitting(true);
+    let submitted = false;
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          reviewee_id: revieweeId,
+          technical_score: rating,
+          collaboration_score: rating,
+          problem_solving_score: rating,
+          mentorship_score: rating,
+          comment: review.trim() || null,
+          appreciation_ids: selectedAppreciations,
+        }),
+      });
+      const data = (await response.json()) as ReviewResponse;
+      if (!response.ok) throw new Error(data.error ?? "Gagal mengirim ulasan.");
+      submitted = true;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Gagal mengirim ulasan.");
+    } finally {
+      setIsSubmitting(false);
+    }
+    if (submitted) onSuccess();
+  }
 
   return (
     <motion.div
@@ -60,7 +171,7 @@ export default function ReviewForm({ personName, onClose }: ReviewFormProps) {
           </button>
         </div>
         <form
-          onSubmit={(event) => event.preventDefault()}
+          onSubmit={submitReview}
           className="flex flex-col gap-6">
           <section aria-labelledby="overall-rating-label">
             <h3
@@ -107,26 +218,29 @@ export default function ReviewForm({ personName, onClose }: ReviewFormProps) {
             <legend className="font-semibold">Apa yang paling kamu apresiasi?</legend>
             <p className="mb-3 mt-1 text-sm text-coal/60">Boleh pilih lebih dari satu.</p>
             <div className="flex flex-wrap gap-2">
-              {appreciationOptions.map((appreciation) => {
-                const isSelected = selectedAppreciations.includes(appreciation);
+              {appreciations.map((appreciation) => {
+                const isSelected = selectedAppreciations.includes(appreciation.id);
 
                 return (
                   <button
-                    key={appreciation}
+                    key={appreciation.id}
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() =>
                       setSelectedAppreciations((current) =>
-                        isSelected ? current.filter((item) => item !== appreciation) : [...current, appreciation],
+                        isSelected
+                          ? current.filter((id) => id !== appreciation.id)
+                          : [...current, appreciation.id],
                       )
                     }
                     className={`rounded-full border border-coal px-3 py-2 text-sm transition-colors ${
                       isSelected ? "bg-coal text-paper" : "bg-transparent text-coal hover:bg-coal/10"
                     }`}>
-                    {appreciation}
+                    {appreciation.label.charAt(0).toUpperCase() + appreciation.label.slice(1)}
                   </button>
                 );
               })}
+              {isLoadingAppreciations && <p className="text-sm text-coal/60">Memuat pilihan...</p>}
             </div>
           </fieldset>
 
@@ -154,6 +268,14 @@ export default function ReviewForm({ personName, onClose }: ReviewFormProps) {
             </p>
           </div>
 
+          {error && (
+            <p
+              role="alert"
+              className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
           <div className="flex gap-3">
             <button
               type="button"
@@ -161,11 +283,21 @@ export default function ReviewForm({ personName, onClose }: ReviewFormProps) {
               className="flex-1 rounded-xl border border-coal px-4 py-3 font-medium transition-colors hover:bg-coal/10">
               Batal
             </button>
-            <button
-              type="submit"
-              className="flex-2 rounded-xl bg-coal px-4 py-3 font-medium text-paper transition-colors hover:bg-coal/90">
-              Kirim ulasan
-            </button>
+            {authToken ? (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-2 rounded-xl bg-coal px-4 py-3 font-medium text-paper transition-colors hover:bg-coal/90 disabled:cursor-not-allowed disabled:opacity-60">
+                {isSubmitting ? "Mengirim..." : "Kirim ulasan"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLoginClick}
+                className="flex-2 rounded-xl bg-coal px-4 py-3 font-medium text-paper transition-colors hover:bg-coal/90">
+                Login
+              </button>
+            )}
           </div>
         </form>
       </motion.div>

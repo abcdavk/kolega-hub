@@ -5,11 +5,14 @@ import { RiStarFill } from "@remixicon/react";
 import IconKarma from "../../app/icons/karma";
 import ReviewForm from "@/components/ui/reviewForm";
 interface PersonCardProps {
+  userId: number;
   name: string;
   division: string | null;
   avatarUrl: string | null;
   score: number;
+  reviewCount: number;
   titles: string[];
+  onReviewSubmitted: () => void;
 }
 
 interface BadgeProps {
@@ -32,7 +35,16 @@ export function Badge({ texts }: BadgeProps) {
   );
 }
 
-export default function PersonCard({ name, division, avatarUrl, score, titles }: PersonCardProps) {
+export default function PersonCard({
+  userId,
+  name,
+  division,
+  avatarUrl,
+  score,
+  reviewCount,
+  titles,
+  onReviewSubmitted,
+}: PersonCardProps) {
   const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
   const initials = name
     .trim()
@@ -65,9 +77,12 @@ export default function PersonCard({ name, division, avatarUrl, score, titles }:
         </div>
 
         <div className="ml-auto flex items-center gap-1">
-          <RiStarFill className="text-paper dark:text-coal" />
+          <RiStarFill className="text-paper dark:text-coal" aria-hidden="true" />
           {/* SCORE */}
-          <p className="font-medium text-lg text-paper dark:text-coal">{score.toFixed(1)}</p>
+          <div className="text-right">
+            <p className="font-medium text-lg text-paper dark:text-coal">{score.toFixed(1)}</p>
+            <p className="text-xs text-paper/60 dark:text-coal/60">{reviewCount} reviews</p>
+          </div>
         </div>
       </div>
       {titles.length > 0 && <Badge texts={titles} />}
@@ -92,8 +107,13 @@ export default function PersonCard({ name, division, avatarUrl, score, titles }:
       </button>
       {isReviewFormOpen && (
         <ReviewForm
+          revieweeId={userId}
           personName={name}
           onClose={() => setIsReviewFormOpen(false)}
+          onSuccess={() => {
+            setIsReviewFormOpen(false);
+            onReviewSubmitted();
+          }}
         />
       )}
     </div>

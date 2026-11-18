@@ -32,6 +32,8 @@ Review creation awards 250 karma and the configured feedback EXP (default 10).
 `REVIEW_COOLDOWN_HOURS` controls the per-reviewer/per-reviewee cooldown
 (default 0, disabled). Redemptions and milestone claims update balances in
 database transactions; their user ID is taken from the token, not the request.
+The review form stores the JWT from login or registration in `localStorage` under the `token` key.
+The overall rating is saved to each of the four review score fields.
 The API currently has no admin role or endpoints for managing shop inventory,
 milestones, or titles.
 

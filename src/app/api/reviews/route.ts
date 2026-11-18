@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     if (!Number.isSafeInteger(revieweeId) || revieweeId < 1) {
       throw new ApiError("reviewee_id tidak valid.", 400);
     }
-    if (revieweeId === auth.id) throw new ApiError("Anda tidak dapat mengulas diri sendiri.", 400);
+    if (auth.id === revieweeId) throw new ApiError("Anda tidak dapat mengulas diri sendiri.", 400);
 
     const scoreFields = [
       ["technical_score", "technical_score"],

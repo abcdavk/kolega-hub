@@ -9,6 +9,7 @@ interface Person {
   name: string;
   division: string | null;
   avatar_url: string | null;
+  total_reviews: number;
   avg_overall: number | null;
   titles: string[];
 }
@@ -23,13 +24,16 @@ export default function Home() {
   const [people, setPeople] = useState<Person[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadPeople() {
+      setIsLoading(true);
+      setError(null);
       try {
-        const response = await fetch("/api/users", { signal: controller.signal });
+        const response = await fetch("/api/users", { cache: "no-store", signal: controller.signal });
         const data = (await response.json()) as UsersResponse;
         if (!response.ok) throw new Error(data.error ?? "Failed to load people.");
         if (!Array.isArray(data.users)) throw new Error("The people response is invalid.");
@@ -45,7 +49,7 @@ export default function Home() {
 
     void loadPeople();
     return () => controller.abort();
-  }, []);
+  }, [refreshKey]);
 
   const filteredPeople = people.filter((person) =>
     `${person.name} ${person.division ?? ""}`.toLowerCase().includes(search.trim().toLowerCase()),
@@ -61,11 +65,14 @@ export default function Home() {
         {filteredPeople.map((person) => (
           <PersonCard
             key={person.user_id}
+            userId={person.user_id}
             name={person.name}
             division={person.division}
             avatarUrl={person.avatar_url}
             score={person.avg_overall ?? 0}
+            reviewCount={person.total_reviews}
             titles={person.titles}
+            onReviewSubmitted={() => setRefreshKey((current) => current + 1)}
           />
         ))}
         {isLoading && <p className="text-sm text-coal/60 dark:text-paper/60">Memuat semua orang...</p>}
