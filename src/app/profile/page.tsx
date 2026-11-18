@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
 import { motion, Reorder, type PanInfo } from "motion/react";
 import { faCheck, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { RiStarFill, RiStarLine } from "@remixicon/react";
 import {
   AUTH_SESSION_CHANGE_EVENT,
   notifyAuthSessionChange,
@@ -35,6 +36,9 @@ interface ApiTitle {
   id: number;
   name: string;
   color_hex: string;
+}
+
+interface UserTitle extends ApiTitle {
   is_visible: number;
   display_order: number;
 }
@@ -45,6 +49,17 @@ interface UserSummary {
   avg_problem_solving: number | string | null;
   avg_mentorship: number | string | null;
   avg_overall: number | string | null;
+}
+
+interface ProfileReview {
+  id: number;
+  reviewer_name: string;
+  technical_score: number;
+  collaboration_score: number;
+  problem_solving_score: number;
+  mentorship_score: number;
+  comment: string | null;
+  created_at: string;
 }
 
 const stats: Stat[] = [
@@ -65,6 +80,8 @@ export default function Profile() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [me, setMe] = useState<MeUser | null>(null);
+  const [reviews, setReviews] = useState<ProfileReview[]>([]);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [division, setDivision] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -95,26 +112,47 @@ export default function Profile() {
     }
 
     setTitleMessage("");
-    setVisibleTitleIds((current) => [...current, id]);
+    void saveVisibleTitles([...visibleTitleIds, id]);
   };
 
   const removeVisibleTitle = (id: number) => {
     setTitleMessage("");
-    setVisibleTitleIds((current) => current.filter((titleId) => titleId !== id));
+    void saveVisibleTitles(visibleTitleIds.filter((titleId) => titleId !== id));
+  };
+
+  const saveVisibleTitles = async (titleIds: number[]) => {
+    setVisibleTitleIds(titleIds);
+    setTitleMessage("");
+    if (!authToken) return;
+
+    try {
+      const response = await fetch("/api/me/titles", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ title_ids: titleIds }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Gagal menyimpan title.");
+    } catch (error) {
+      setTitleMessage(error instanceof Error ? error.message : "Gagal menyimpan title.");
+    }
   };
 
   const droppedInside = (ref: RefObject<HTMLElement | null>, point: PanInfo["point"]) => {
     const bounds = ref.current?.getBoundingClientRect();
     return (
       bounds !== undefined &&
-      point.x >= bounds.left &&
-      point.x <= bounds.right &&
-      point.y >= bounds.top &&
-      point.y <= bounds.bottom
+      point.x >= bounds.left + window.scrollX &&
+      point.x <= bounds.right + window.scrollX &&
+      point.y >= bounds.top + window.scrollY &&
+      point.y <= bounds.bottom + window.scrollY
     );
   };
 
-  const handleOwnedTitleDragEnd = (id: number, info: PanInfo) => {
+  const handleAvailableTitleDragEnd = (id: number, info: PanInfo) => {
     if (droppedInside(visibleDropZoneRef, info.point)) addVisibleTitle(id);
   };
 
@@ -125,6 +163,9 @@ export default function Profile() {
     setSessionError(null);
     if (!token) {
       setMe(null);
+      setTitles([]);
+      setReviews([]);
+      setReviewsError(null);
       setName("");
       setDivision("");
       nameRef.current = "";
@@ -149,9 +190,31 @@ export default function Profile() {
       nameRef.current = profile.name;
       divisionRef.current = profile.division ?? "";
 
-      const userResponse = await fetch(`/api/users/${profile.id}`, { cache: "no-store" });
-      const userData = await userResponse.json();
+      const [userResponse, reviewsResponse, titlesResponse] = await Promise.all([
+        fetch(`/api/users/${profile.id}`, { cache: "no-store" }),
+        fetch(`/api/reviews?reviewee_id=${profile.id}`, { cache: "no-store" }),
+        fetch("/api/titles", { cache: "no-store" }),
+      ]);
+      const [userData, reviewsData, titlesData] = await Promise.all([
+        userResponse.json(),
+        reviewsResponse.json(),
+        titlesResponse.json(),
+      ]);
       if (!userResponse.ok) throw new Error(userData.error ?? "Gagal memuat data penilaian.");
+      if (!titlesResponse.ok) throw new Error(titlesData.error ?? "Gagal memuat title tersedia.");
+      if (Array.isArray(titlesData.titles)) {
+        setTitles((titlesData.titles as ApiTitle[]).map((title) => ({
+          id: title.id,
+          label: title.name,
+          color: title.color_hex,
+        })));
+      }
+      if (!reviewsResponse.ok) {
+        setReviewsError(reviewsData.error ?? "Gagal memuat daftar ulasan.");
+      } else if (Array.isArray(reviewsData.reviews)) {
+        setReviews(reviewsData.reviews);
+        setReviewsError(null);
+      }
       const summary = userData.user as UserSummary;
       setStatRatings({
         technical: Number(summary.avg_technical ?? 0),
@@ -161,15 +224,10 @@ export default function Profile() {
       });
 
       if (Array.isArray(userData.titles)) {
-        const ownedTitles = (userData.titles as ApiTitle[]).map((title) => ({
-          id: title.id,
-          label: title.name,
-          color: title.color_hex,
-        }));
-        setTitles(ownedTitles);
         setVisibleTitleIds(
-          (userData.titles as ApiTitle[])
+          (userData.titles as UserTitle[])
             .filter((title) => title.is_visible === 1)
+            .slice(0, maxVisibleTitle)
             .map((title) => title.id),
         );
       }
@@ -386,7 +444,7 @@ export default function Profile() {
         ref={visibleDropZoneRef}
         axis="x"
         values={visibleTitleIds}
-        onReorder={setVisibleTitleIds}
+        onReorder={(titleIds) => void saveVisibleTitles(titleIds)}
         aria-label="Visible titles. Drag to reorder titles or use the hide button."
         className="flex min-h-20 flex-wrap items-center gap-3 rounded-xl border-2 border-dashed border-coal/20 p-3 dark:border-paper/20">
         {visibleTitleIds.map((id) => {
@@ -419,44 +477,50 @@ export default function Profile() {
           </li>
         )}
       </Reorder.Group>
-      <p className="mt-5 mb-2 font-medium">Owned</p>
+      <p className="mt-5 mb-2 font-medium">Available Titles</p>
       <div
-        aria-label="Owned titles. Drag a title to the visible area to show it."
+        aria-label="Available titles. Apply a title by dragging it to the visible area or using the apply button."
         role="group"
         className="flex min-h-20 flex-wrap items-center gap-3 rounded-xl border-2 border-dashed border-coal/20 p-3 dark:border-paper/20">
-        {titles.map((title) => {
-          const isVisible = visibleTitleIds.includes(title.id);
-
-          return (
+        {titles
+          .filter((title) => !visibleTitleIds.includes(title.id))
+          .map((title) => (
             <motion.div
               key={title.id}
               drag
               dragMomentum={false}
               dragSnapToOrigin
-              onDragEnd={(_, info) => handleOwnedTitleDragEnd(title.id, info)}
+              onDragEnd={(_, info) => handleAvailableTitleDragEnd(title.id, info)}
               whileDrag={{ scale: 1.05, zIndex: 1 }}
               style={{ rotate: `${rotationForTitle(title.id)}deg`, backgroundColor: title.color }}
-              className={`touch-none cursor-grab rounded-lg px-3 py-2 text-coal shadow-sm active:cursor-grabbing ${
-                isVisible ? "opacity-60" : ""
-              }`}>
+              className="touch-none cursor-grab rounded-lg px-3 py-2 text-coal shadow-sm active:cursor-grabbing">
               <span>{title.label}</span>
               <button
                 type="button"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => addVisibleTitle(title.id)}
-                disabled={isVisible || visibleTitleIds.length >= maxVisibleTitle}
-                aria-label={isVisible ? `${title.label} is visible` : `Show ${title.label}`}
+                disabled={visibleTitleIds.length >= maxVisibleTitle}
+                aria-label={`Apply ${title.label}`}
                 className="ml-2 cursor-pointer rounded-full px-1 font-bold hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50">
-                {isVisible ? "✓" : "+"}
+                +
               </button>
             </motion.div>
-          );
-        })}
+          ))}
+        {titles.length > 0 && titles.every((title) => visibleTitleIds.includes(title.id)) && (
+          <p className="list-none text-sm text-coal-lighter dark:text-paper-darker">
+            All available titles are applied.
+          </p>
+        )}
+        {titles.length === 0 && (
+          <p className="list-none text-sm text-coal-lighter dark:text-paper-darker">
+            No titles are available right now.
+          </p>
+        )}
       </div>
       <p
         aria-live="polite"
         className="mt-2 min-h-5 text-sm text-coal-lighter dark:text-paper-darker">
-        {titleMessage || "Drag to arrange visible titles. Use × to hide a title or drag one from Owned to show it."}
+        {titleMessage || "Apply available titles to show them on your profile. You can show up to 3 titles."}
       </p>
 
       <h2 className="text-coal dark:text-paper text-lg my-4 font-bold uppercase">Your Stats</h2>
@@ -473,14 +537,16 @@ export default function Profile() {
               <div
                 role="img"
                 aria-label={`${stat.label}: ${rating.toFixed(1)} out of 5`}
-                className="flex gap-2">
+                className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((value) => {
                   const isActive = value <= Math.round(rating);
+                  const Star = isActive ? RiStarFill : RiStarLine;
 
                   return (
-                    <span
+                    <Star
                       key={value}
-                      className={`h-2 flex-1 rounded-full border border-paper-darker ${isActive ? "bg-green-300" : "bg-paper"}`}
+                      aria-hidden="true"
+                      className={`h-5 w-5 ${isActive ? "text-amber-400" : "text-coal/25 dark:text-paper/25"}`}
                     />
                   );
                 })}
@@ -512,6 +578,65 @@ export default function Profile() {
           {overallRating.toFixed(1)} ({ratingLabel(overallRating)})
         </p>
       </div>
+      <h2 className="text-coal dark:text-paper text-lg my-4 font-bold uppercase">Ulasan</h2>
+      {reviewsError && (
+        <p role="alert" className="mb-3 text-sm text-red-600">
+          {reviewsError}
+        </p>
+      )}
+      {reviews.length === 0 && !reviewsError ? (
+        <p className="text-sm text-coal-lighter dark:text-paper-darker">Belum ada ulasan.</p>
+      ) : (
+        <div className="grid gap-3">
+          {reviews.map((review) => {
+            const reviewRating =
+              (review.technical_score +
+                review.collaboration_score +
+                review.problem_solving_score +
+                review.mentorship_score) /
+              4;
+
+            return (
+              <article
+                key={review.id}
+                className="rounded-2xl bg-coal p-4 text-paper dark:bg-paper dark:text-coal">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold">{review.reviewer_name}</h3>
+                    <time
+                      dateTime={review.created_at}
+                      className="text-xs opacity-70">
+                      {new Date(review.created_at).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </time>
+                  </div>
+                  <div className="flex items-center gap-1 font-medium">
+                    <RiStarFill aria-hidden="true" />
+                    <span>{reviewRating.toFixed(1)}</span>
+                  </div>
+                </div>
+                {review.comment && <p className="mt-3 whitespace-pre-wrap text-sm">{review.comment}</p>}
+                <dl className="mt-4 grid grid-cols-1 gap-x-4 gap-y-2 text-xs sm:grid-cols-2">
+                  {[
+                    ["Technical & Execution Skills", review.technical_score],
+                    ["Collaboration & Communication", review.collaboration_score],
+                    ["Problem Solving Under Pressure", review.problem_solving_score],
+                    ["Mentorship & Culture Contribution", review.mentorship_score],
+                  ].map(([label, rating]) => (
+                    <div key={label} className="flex justify-between gap-2 opacity-80">
+                      <dt>{label}</dt>
+                      <dd className="shrink-0 font-semibold">{rating} / 5</dd>
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            );
+          })}
+        </div>
+      )}
       {sessionError && (
         <p
           role="alert"
@@ -523,7 +648,7 @@ export default function Profile() {
         <button
           type="button"
           onClick={logout}
-          className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-coal px-4 text-sm font-medium transition-transform duration-300 hover:scale-[1.02] cursor-pointer dark:border-paper">
+          className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-coal-lighter px-4 text-sm font-medium transition-transform duration-300 hover:scale-[1.02] cursor-pointer dark:border-paper-darker">
           <FontAwesomeIcon
             icon={faRightFromBracket}
             aria-hidden="true"
