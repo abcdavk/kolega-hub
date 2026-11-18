@@ -1,11 +1,11 @@
 import type { RowDataPacket } from "mysql2";
 import { ApiError, errorResponse, positiveId, requireUser } from "@/lib/api";
 import { getDb } from "@/lib/db";
+import { milestoneTargetPoints } from "@/lib/milestones";
 
 type UserExp = RowDataPacket & { feedback_exp: number };
 type UserMilestone = RowDataPacket & {
   level: number;
-  target_points: number;
   reward_karma: number;
   is_claimed: number;
 };
@@ -24,12 +24,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     );
     if (!users[0]) throw new ApiError("Pengguna tidak ditemukan.", 404);
     const [milestones] = await connection.execute<UserMilestone[]>(
-      "SELECT level, target_points, reward_karma FROM milestones WHERE id = ? LIMIT 1",
+      "SELECT level, reward_karma FROM milestones WHERE id = ? LIMIT 1",
       [milestoneId],
     );
     const milestone = milestones[0];
     if (!milestone) throw new ApiError("Milestone tidak ditemukan.", 404);
-    if (users[0].feedback_exp < milestone.target_points) {
+    const targetPoints = milestoneTargetPoints(milestone.level);
+    if (users[0].feedback_exp < targetPoints) {
       throw new ApiError("Target feedback belum tercapai.", 409);
     }
 
@@ -70,7 +71,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       [milestone.reward_karma, auth.id],
     );
     await connection.commit();
-    return Response.json({ milestone_id: milestoneId, reward_karma: milestone.reward_karma });
+    return Response.json({
+      milestone_id: milestoneId,
+      reward_karma: milestone.reward_karma,
+      target_points: targetPoints,
+    });
   } catch (error) {
     if (connection) await connection.rollback();
     return errorResponse(error);

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import SearchBar from "@/components/ui/SearchBar";
 import LevelProgress from "@/components/ui/LevelProgress";
+import ClaimPopUp from "@/components/ui/claimPopup";
 import BarangCard from "@/components/shop/barangCard";
 import {
   AUTH_SESSION_CHANGE_EVENT,
@@ -51,7 +52,9 @@ export default function Shop() {
   const [isActing, setIsActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [claimConfirmation, setClaimConfirmation] = useState<Milestone | null>(null);
   const [selectedExchangeItem, setSelectedExchangeItem] = useState<ShopItem | null>(null);
+  const [voucherCodes, setVoucherCodes] = useState<Record<number, string>>({});
   const [voucherCode, setVoucherCode] = useState<string | null>(null);
   const [isVoucherRevealed, setIsVoucherRevealed] = useState(false);
   const [isVoucherCopied, setIsVoucherCopied] = useState(false);
@@ -196,6 +199,10 @@ export default function Shop() {
           ? { ...current, karma_balance: current.karma_balance + milestone.reward_karma }
           : current,
       );
+      setClaimConfirmation({
+        ...milestone,
+        reward_karma: Number(data.reward_karma ?? milestone.reward_karma),
+      });
       notifyAuthSessionChange(authToken);
       await loadProtectedData(authToken);
       setSuccess(`Milestone level ${milestone.level} berhasil diklaim.`);
@@ -225,6 +232,11 @@ export default function Shop() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Gagal menukarkan item.");
+      const newVoucherCode = generateVoucherCode();
+      const redemptionId = Number(data.redemption?.id);
+      if (Number.isSafeInteger(redemptionId) && redemptionId > 0) {
+        setVoucherCodes((current) => ({ ...current, [redemptionId]: newVoucherCode }));
+      }
       setItems((current) =>
         current.map((shopItem) => shopItem.id === item.id ? { ...shopItem, stock: shopItem.stock - 1 } : shopItem),
       );
@@ -233,10 +245,9 @@ export default function Shop() {
           ? { ...current, karma_balance: Math.max(0, current.karma_balance - item.point_cost) }
           : current,
       );
-      setVoucherCode(generateVoucherCode());
+      setVoucherCode(newVoucherCode);
       setIsVoucherRevealed(false);
       notifyAuthSessionChange(authToken);
-      await loadProtectedData(authToken);
       setSuccess(`${item.name} berhasil ditukarkan.`);
     } catch (exchangeError) {
       setError(exchangeError instanceof Error ? exchangeError.message : "Gagal menukarkan item.");
@@ -254,6 +265,21 @@ export default function Shop() {
     setIsVoucherRevealed(false);
     setIsVoucherCopied(false);
     setSelectedExchangeItem(item);
+  }
+
+  function openRedemptionVoucher(redemption: Redemption) {
+    const code = voucherCodes[redemption.id] ?? generateVoucherCode();
+    setVoucherCodes((current) => ({ ...current, [redemption.id]: code }));
+    setSelectedExchangeItem({
+      id: redemption.id,
+      name: redemption.item_name,
+      image_url: null,
+      point_cost: redemption.points_spent,
+      stock: 0,
+    });
+    setVoucherCode(code);
+    setIsVoucherRevealed(false);
+    setIsVoucherCopied(false);
   }
 
   function closeExchangePopup() {
@@ -341,24 +367,39 @@ export default function Shop() {
                   key={redemption.id}
                   className="flex items-center justify-between gap-3 rounded-lg border border-coal/20 px-3 py-2 text-sm dark:border-paper/20">
                   <span className="text-coal dark:text-paper">{redemption.item_name}</span>
-                  <span className="text-coal-lighter dark:text-paper-darker">
-                    {redemption.points_spent} karma - {redemption.status}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-coal-lighter dark:text-paper-darker">
+                      {redemption.points_spent} karma
+                    </span>
+                    <a
+                      href={`#voucher-${redemption.id}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        openRedemptionVoucher(redemption);
+                      }}
+                      className="cursor-pointer text-coal underline underline-offset-2 dark:text-paper">
+                      Cek Voucher
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
       </div>
+      {claimConfirmation && (
+        <ClaimPopUp
+          level={claimConfirmation.level}
+          rewardKarma={claimConfirmation.reward_karma}
+          onClose={() => setClaimConfirmation(null)}
+        />
+      )}
       {selectedExchangeItem && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="exchange-popup-title"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) closeExchangePopup();
-          }}>
+          aria-labelledby="exchange-popup-title">
           <div className="w-full max-w-md rounded-2xl bg-paper p-5 text-coal shadow-xl dark:bg-coal dark:text-paper">
             {voucherCode ? (
               <div className="flex flex-col items-center text-center">
