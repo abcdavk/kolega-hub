@@ -12,70 +12,31 @@ interface ReviewFormProps {
   onSuccess: () => void;
 }
 
-interface Appreciation {
-  id: number;
-  label: string;
-}
-
-interface AppreciationsResponse {
-  appreciations?: Appreciation[];
-  error?: string;
-}
-
 interface ReviewResponse {
   error?: string;
 }
 
+const ratingAspects = [
+  { id: "technical_score", label: "Technical & Execution Skills" },
+  { id: "collaboration_score", label: "Collaboration & Communication" },
+  { id: "problem_solving_score", label: "Problem Solving Under Pressure" },
+  { id: "mentorship_score", label: "Mentorship & Culture Contribution" },
+] as const;
+
+type RatingAspect = (typeof ratingAspects)[number]["id"];
+
 export default function ReviewForm({ revieweeId, personName, onClose, onSuccess }: ReviewFormProps) {
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [rating, setRating] = useState(1);
-  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
-  const [appreciations, setAppreciations] = useState<Appreciation[]>([]);
-  const [selectedAppreciations, setSelectedAppreciations] = useState<number[]>([]);
+  const [ratings, setRatings] = useState<Record<RatingAspect, number>>({
+    technical_score: 1,
+    collaboration_score: 1,
+    problem_solving_score: 1,
+    mentorship_score: 1,
+  });
+  const [hoveredRatings, setHoveredRatings] = useState<Partial<Record<RatingAspect, number>>>({});
   const [review, setReview] = useState("");
-  const [isLoadingAppreciations, setIsLoadingAppreciations] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const displayedRating = hoveredRating ?? rating;
-  const ratingDescriptions = [
-    "",
-    "Kurang bagus",
-    "Perlu ditingkatkan",
-    "Cukup baik",
-    "Kolaborasi yang baik bangettt",
-    "Hebat luar biasa, alhamdulillah!",
-  ];
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadAppreciations() {
-      try {
-        const response = await fetch("/api/appreciations", { signal: controller.signal });
-        const data = (await response.json()) as AppreciationsResponse;
-        if (!response.ok) throw new Error(data.error ?? "Gagal memuat pilihan apresiasi.");
-        if (!Array.isArray(data.appreciations)) {
-          throw new Error("Data pilihan apresiasi tidak valid.");
-        }
-
-        setAppreciations(data.appreciations);
-        setSelectedAppreciations(
-          data.appreciations
-            .filter(({ label }) => label === "kinerja" || label === "produktifitas")
-            .map(({ id }) => id),
-        );
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setError(error instanceof Error ? error.message : "Gagal memuat pilihan apresiasi.");
-        }
-      } finally {
-        if (!controller.signal.aborted) setIsLoadingAppreciations(false);
-      }
-    }
-
-    void loadAppreciations();
-    return () => controller.abort();
-  }, []);
 
   useEffect(() => {
     const handleSessionChange = (event: WindowEventMap[typeof AUTH_SESSION_CHANGE_EVENT]) => {
@@ -117,12 +78,8 @@ export default function ReviewForm({ revieweeId, personName, onClose, onSuccess 
         },
         body: JSON.stringify({
           reviewee_id: revieweeId,
-          technical_score: rating,
-          collaboration_score: rating,
-          problem_solving_score: rating,
-          mentorship_score: rating,
+          ...ratings,
           comment: review.trim() || null,
-          appreciation_ids: selectedAppreciations,
         }),
       });
       const data = (await response.json()) as ReviewResponse;
@@ -173,76 +130,49 @@ export default function ReviewForm({ revieweeId, personName, onClose, onSuccess 
         <form
           onSubmit={submitReview}
           className="flex flex-col gap-6">
-          <section aria-labelledby="overall-rating-label">
-            <h3
-              id="overall-rating-label"
-              className="mb-2 font-semibold">
-              Penilaian keseluruhan
-            </h3>
-            <div
-              className="flex items-center gap-1"
-              role="group"
-              aria-label="Pilih rating dari 1 sampai 5"
-              onMouseLeave={() => setHoveredRating(null)}>
-              {Array.from({ length: 5 }, (_, index) => {
-                const value = index + 1;
-                const StarIcon = value <= displayedRating ? RiStarFill : RiStarLine;
+          <div className="flex flex-col gap-5">
+            {ratingAspects.map((aspect) => {
+              const displayedRating = hoveredRatings[aspect.id] ?? ratings[aspect.id];
 
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-label={`Beri nilai ${value} dari 5`}
-                    aria-pressed={rating === value}
-                    onMouseEnter={() => setHoveredRating(value)}
-                    onClick={() => setRating(value)}
-                    className="cursor-pointer text-coal transition-transform hover:scale-110">
-                    <StarIcon className="h-8 w-8" />
-                  </button>
-                );
-              })}
-              <span
-                className="ml-2 text-sm"
-                aria-live="polite">
-                {displayedRating} / 5
-              </span>
-            </div>
-            <p
-              className="mt-2 text-sm text-coal/60"
-              aria-live="polite">
-              {ratingDescriptions[displayedRating]}
-            </p>
-          </section>
+              return (
+                <fieldset key={aspect.id}>
+                  <legend className="mb-2 font-semibold">{aspect.label}</legend>
+                  <div
+                    className="flex items-center gap-1"
+                    role="group"
+                    aria-label={`Nilai ${aspect.label} dari 1 sampai 5`}
+                    onMouseLeave={() =>
+                      setHoveredRatings((current) => ({ ...current, [aspect.id]: undefined }))
+                    }>
+                    {Array.from({ length: 5 }, (_, index) => {
+                      const value = index + 1;
+                      const StarIcon = value <= displayedRating ? RiStarFill : RiStarLine;
 
-          <fieldset>
-            <legend className="font-semibold">Apa yang paling kamu apresiasi?</legend>
-            <p className="mb-3 mt-1 text-sm text-coal/60">Boleh pilih lebih dari satu.</p>
-            <div className="flex flex-wrap gap-2">
-              {appreciations.map((appreciation) => {
-                const isSelected = selectedAppreciations.includes(appreciation.id);
-
-                return (
-                  <button
-                    key={appreciation.id}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() =>
-                      setSelectedAppreciations((current) =>
-                        isSelected
-                          ? current.filter((id) => id !== appreciation.id)
-                          : [...current, appreciation.id],
-                      )
-                    }
-                    className={`rounded-full border border-coal px-3 py-2 text-sm transition-colors ${
-                      isSelected ? "bg-coal text-paper" : "bg-transparent text-coal hover:bg-coal/10"
-                    }`}>
-                    {appreciation.label.charAt(0).toUpperCase() + appreciation.label.slice(1)}
-                  </button>
-                );
-              })}
-              {isLoadingAppreciations && <p className="text-sm text-coal/60">Memuat pilihan...</p>}
-            </div>
-          </fieldset>
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-label={`Beri nilai ${value} dari 5 untuk ${aspect.label}`}
+                          aria-pressed={ratings[aspect.id] === value}
+                          onMouseEnter={() =>
+                            setHoveredRatings((current) => ({ ...current, [aspect.id]: value }))
+                          }
+                          onClick={() =>
+                            setRatings((current) => ({ ...current, [aspect.id]: value }))
+                          }
+                          className="cursor-pointer text-coal transition-transform hover:scale-110">
+                          <StarIcon className="h-7 w-7" />
+                        </button>
+                      );
+                    })}
+                    <span className="ml-2 text-sm" aria-live="polite">
+                      {displayedRating} / 5
+                    </span>
+                  </div>
+                </fieldset>
+              );
+            })}
+          </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between">

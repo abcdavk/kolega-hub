@@ -152,12 +152,6 @@ export async function POST(request: Request) {
        WHERE id = ?`,
       [points, feedbackExp, auth.id],
     );
-    await connection.execute(
-      `INSERT IGNORE INTO user_milestones (user_id, milestone_id)
-       SELECT ?, id FROM milestones
-       WHERE target_points <= (SELECT feedback_exp FROM users WHERE id = ?)`,
-      [auth.id, auth.id],
-    );
     await connection.commit();
     return Response.json({ id: result.insertId, points_awarded: points }, { status: 201 });
   } catch (error) {

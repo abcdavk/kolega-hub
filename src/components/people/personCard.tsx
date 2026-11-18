@@ -11,24 +11,28 @@ interface PersonCardProps {
   avatarUrl: string | null;
   score: number;
   reviewCount: number;
-  titles: string[];
+  titles: TitleBadge[];
   onReviewSubmitted: () => void;
 }
 
-interface BadgeProps {
-  texts: string[];
+interface TitleBadge {
+  id: number;
+  name: string;
+  color_hex: string;
 }
 
-export function Badge({ texts }: BadgeProps) {
-  const styles = ["-rotate-2 bg-red-300", "rotate-2 bg-purple-400", "-rotate-2 bg-green-300"];
-
+export function Badge({ titles }: { titles: TitleBadge[] }) {
   return (
-    <div className="my-4 grid w-fit grid-cols-2 items-start gap-2">
-      {texts.map((text, index) => (
+    <div className="my-4 flex flex-wrap items-start gap-3">
+      {titles.map((title) => (
         <div
-          key={`${text}-${index}`}
-          className={`inline-flex w-fit items-center px-2 py-1 ${styles[index % styles.length]}`}>
-          <p className="paperspace-nowrap text-xs leading-none font-extralight text-coal">{text}</p>
+          key={title.id}
+          style={{
+            rotate: `${(((title.id * 37) % 7) - 3) * 0.7}deg`,
+            backgroundColor: title.color_hex,
+          }}
+          className="inline-flex w-fit items-center rounded-lg px-3 py-2 text-xs leading-none text-coal shadow-sm">
+          {title.name}
         </div>
       ))}
     </div>
@@ -57,7 +61,7 @@ export default function PersonCard({
   return (
     <div className="flex h-full flex-col rounded-2xl bg-coal dark:bg-paper p-3">
       {/* HEADER */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pb-2">
         {/* LOGO */}
         <div className="h-14 w-14 rounded-lg bg-paper dark:bg-coal flex items-center justify-center text-coal dark:text-paper">
           {avatarUrl ? (
@@ -81,11 +85,10 @@ export default function PersonCard({
           {/* SCORE */}
           <div className="text-right">
             <p className="font-medium text-lg text-paper dark:text-coal">{score.toFixed(1)}</p>
-            <p className="text-xs text-paper/60 dark:text-coal/60">{reviewCount} reviews</p>
           </div>
         </div>
       </div>
-      {titles.length > 0 && <Badge texts={titles} />}
+      {titles.length > 0 && <Badge titles={titles} />}
 
       {/* GIVE RATING BUTTON */}
       <button
@@ -102,7 +105,7 @@ export default function PersonCard({
             <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
             <IconKarma className="block h-6 w-6 bg-coal dark:bg-paper" />
           </div>
-          <p className="text-coal dark:text-paper font-medium">500</p>
+          <p className="text-coal dark:text-paper font-medium">250</p>
         </div>
       </button>
       {isReviewFormOpen && (

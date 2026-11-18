@@ -1,29 +1,31 @@
 interface ClaimPopUpProps {
+  level: number;
+  rewardKarma: number;
   onClose: () => void;
 }
 
-export default function ClaimPopUp({ onClose }: ClaimPopUpProps) {
-    return (
-      <>
-        <div
-          className="fixed inset-0 z-100 flex items-center justify-center backdrop-blur-sm bg-black/60 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="claim-popup-title"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) onClose();
-          }}>
-            <div className="dark:bg-paper bg-coal rounded-2xl p-4">
-                <div className="flex flex-col items-center p-4 justify-between gap-1 text-paper dark:text-coal">
-                    <h1 id="claim-popup-title" className="font-semibold text-3xl">Selamat!</h1>
-                    <h1 id="claim-popup-title" className="font-semibold text-3xl">Karma telah masuk</h1>
-                    <h1 id="claim-popup-title" className="font-semibold text-3xl">ke dompet anda</h1>
-                    <button type="button" onClick={onClose} aria-label="Tutup popup" className="bg-paper mt-2 dark:bg-coal text-coal dark:text-paper px-3 py-1 w-full rounded-2xl"> 
-                        Ok
-                    </button>
-                </div>
-            </div>
-        </div>
-      </>
-    );
+export default function ClaimPopUp({ level, rewardKarma, onClose }: ClaimPopUpProps) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="claim-popup-title">
+      <div className="w-full max-w-md rounded-3xl bg-paper p-6 text-center text-coal shadow-2xl sm:p-8 dark:bg-coal dark:text-paper">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-coal-lighter dark:text-paper-darker">
+          Milestone tercapai
+        </p>
+        <p className="mt-2 text-2xl font-bold">+{rewardKarma} karma</p>
+        <p className="mt-2 text-coal-lighter dark:text-paper-darker">
+          Level {level} berhasil diklaim.
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-7 h-12 w-full rounded-xl bg-coal px-4 text-sm font-semibold text-paper transition-transform hover:scale-[1.01] dark:bg-paper dark:text-coal">
+          Konfirmasi
+        </button>
+      </div>
+    </div>
+  );
 }

@@ -89,25 +89,25 @@ export default function AuthForm({
   }
 
   return (
-    <section className="mb-6 rounded-lg border border-coal/20 dark:border-paper/20 p-5">
-      <h3 className="mb-2 font-medium text-center tracking-wide text-lg">{title}</h3>
+    <section>
+      <h3 className="mb-4 text-center text-sm font-medium tracking-wide text-coal-lighter dark:text-paper-darker">{title}</h3>
       {isCheckingSession ? (
         <p className="text-sm text-coal/60">Memeriksa sesi...</p>
       ) : authToken ? (
-        <div className="flex items-center justify-between gap-3 text-sm">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-coal/5 p-4 text-sm dark:bg-paper/5">
           <span>Login sebagai {reviewerName ?? "akun tersimpan"}.</span>
           {showLogoutButton && (
             <button
               type="button"
               onClick={logout}
-              className="underline">
+              className="font-medium underline underline-offset-4">
               Keluar
             </button>
           )}
         </div>
       ) : (
         <>
-          <div className="mb-3 items-center justify-center text-center flex gap-2">
+          <div className="mb-5 flex items-center gap-1 rounded-xl bg-coal/5 p-1 dark:bg-paper/5">
             <button
               type="button"
               onClick={() => {
@@ -115,8 +115,10 @@ export default function AuthForm({
                 setAuthError(null);
               }}
               aria-pressed={authMode === "login"}
-              className={`rounded border px-3 py-1 w-full text-sm ${
-                authMode === "login" ? "bg-coal dark:bg-paper text-paper dark:text-coal" : ""
+              className={`h-10 w-full rounded-lg px-3 text-sm font-medium transition-colors ${
+                authMode === "login"
+                  ? "bg-paper text-coal shadow-sm dark:bg-coal dark:text-paper"
+                  : "text-coal-lighter hover:text-coal dark:text-paper-darker dark:hover:text-paper"
               }`}>
               Login
             </button>
@@ -127,15 +129,17 @@ export default function AuthForm({
                 setAuthError(null);
               }}
               aria-pressed={authMode === "register"}
-              className={`rounded border px-3 w-full py-1 text-sm ${
-                authMode === "register" ? "bg-coal dark:bg-paper text-paper dark:text-coal" : ""
+              className={`h-10 w-full rounded-lg px-3 text-sm font-medium transition-colors ${
+                authMode === "register"
+                  ? "bg-paper text-coal shadow-sm dark:bg-coal dark:text-paper"
+                  : "text-coal-lighter hover:text-coal dark:text-paper-darker dark:hover:text-paper"
               }`}>
               Daftar
             </button>
           </div>
           <form
             onSubmit={submitAuth}
-            className="flex flex-col gap-2">
+            className="flex flex-col gap-3">
             {authMode === "register" && (
               <input
                 type="text"
@@ -146,7 +150,7 @@ export default function AuthForm({
                 onChange={(event) => setAuthName(event.target.value)}
                 placeholder="Nama"
                 aria-label="Nama"
-                className="rounded border border-coal/30 dark:border-paper/30 bg-transparent px-3 py-2 text-sm"
+                className="h-12 rounded-xl bg-coal/5 px-4 text-sm outline-none transition-shadow placeholder:text-coal-lighter/70 focus:ring-2 focus:ring-coal/20 dark:bg-paper/5 dark:placeholder:text-paper-darker/70 dark:focus:ring-paper/20"
               />
             )}
             <input
@@ -157,7 +161,7 @@ export default function AuthForm({
               onChange={(event) => setAuthEmail(event.target.value)}
               placeholder="Email"
               aria-label="Email"
-              className="rounded border border-coal/30 dark:border-paper/30 bg-transparent px-3 py-2 text-sm"
+              className="h-12 rounded-xl bg-coal/5 px-4 text-sm outline-none transition-shadow placeholder:text-coal-lighter/70 focus:ring-2 focus:ring-coal/20 dark:bg-paper/5 dark:placeholder:text-paper-darker/70 dark:focus:ring-paper/20"
             />
             <input
               type="password"
@@ -169,19 +173,19 @@ export default function AuthForm({
               onChange={(event) => setAuthPassword(event.target.value)}
               placeholder="Password"
               aria-label="Password"
-              className="rounded border border-coal/30 dark:border-paper/30 bg-transparent px-3 py-2 text-sm"
+              className="h-12 rounded-xl bg-coal/5 px-4 text-sm outline-none transition-shadow placeholder:text-coal-lighter/70 focus:ring-2 focus:ring-coal/20 dark:bg-paper/5 dark:placeholder:text-paper-darker/70 dark:focus:ring-paper/20"
             />
             {authError && (
               <p
                 role="alert"
-                className="text-sm text-red-600">
+                className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-600">
                 {authError}
               </p>
             )}
             <button
               type="submit"
               disabled={isAuthenticating}
-              className="self-start w-full rounded bg-coal dark:bg-paper px-3 py-2 text-sm text-paper dark:text-coal disabled:opacity-60">
+              className="mt-1 h-12 w-full rounded-xl bg-coal px-4 text-sm font-semibold text-paper transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-paper dark:text-coal">
               {isAuthenticating ? "Memproses..." : authMode === "register" ? "Daftar" : "Login"}
             </button>
           </form>
