@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import IconKarma from "../../app/icons/karma";
+import BuyConfirmPopup from "./buyConfirmPopup";
 
 interface Barangprops {
   namaBarang: string;
